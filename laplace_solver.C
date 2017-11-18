@@ -53,10 +53,13 @@ int main()
   double L = 1.6;
   double h = 0.0039;
   int Ntot = int(L/h);
-  cout << Ntot << endl;
+
+  cout << "ficheiro de regiao?" << endl;
+  string filename;
+  cin >> filename;
 
   ifstream infile;
-  infile.open("kochsquare.dat");
+  infile.open(filename.c_str());
   vector<vector<pair<int,int>>> grid;
   vector<pair<int,int>> line;
   double xf,yf;
@@ -90,13 +93,11 @@ int main()
   grid.push_back(line);
 
 
-  //int Nmodos = 2;
+  int Nmodos = 2;
 
   vector<T> coefficients;
 
   //double *boundary = new double[bleng];
-
-  cout << leng << endl;
 
   Eigen::VectorXd b(leng);
 
@@ -245,6 +246,7 @@ int main()
     }
   }
   outfile.close();
+  cout << "escrevi a solucao para um ficheiro" << endl;
 
 //Imprimir maximos/minimos para ficheiro
   /*ofstream outfilemax;
@@ -287,7 +289,7 @@ int main()
       outfilef << h*i << "   " << h*j << "   " << f(h,i,j,Ntot,a,D) << endl;
     }
   outfilef.close();
-
+  cout << "escrevi o potencial para um ficheiro" << endl;
 
 //Escrever vale para ficheiro
   /*ofstream outfilevale;
@@ -306,22 +308,27 @@ int main()
 
 //Calculo de valores e vectores proprios
 
-  /*SparseGenMatProd<double> op(A);
+  SparseGenMatProd<double> op(A);
+  cout << "BATATA1" << endl;
   GenEigsSolver< double, LARGEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+3);
+  cout << "BATATA2" << endl;
   eigs.init();
+  cout << "BATATA3" << endl;
   int nconv = eigs.compute();
-
+  cout << "BATATA4" << endl;
   Eigen::VectorXcd evalues;
+  cout << "BATATA5" << endl;
   if(eigs.info() == SUCCESSFUL)
+  {
     evalues = eigs.eigenvalues();
+    cout << "fui bem sucedido" << endl;
+  }
+  else
+    cout << "falhei na vida" << endl;
+
 
   cout << "sobrevivi a calcular os valores proprios" << endl;
 
-
-  Eigen::MatrixXcd evectors = eigs.eigenvectors();
-
-
-  cout << "sobrevivi a calcular os vectores proprios" << endl;
 
   ofstream outfile_ev;
   outfile_ev.open("eigenvalues.dat");
@@ -330,21 +337,27 @@ int main()
 
   outfile_ev.close();
 
-  cout << "valor proprio fundamental: " << evalues(1) << endl;
   cout << "valor proprio 1 estado excitado: " << evalues(0) << endl;
+  cout << "valor proprio fundamental: " << evalues(1) << endl;
 
+  Eigen::MatrixXcd evectors = eigs.eigenvectors();
+
+
+  cout << "sobrevivi a calcular os vectores proprios" << endl;
 
   //cout << evectors(0,0).real() << endl;
 
   ofstream outfile_evec1;
   outfile_evec1.open("eigenvectors0.dat");
 
-  for(int i=0; i<leng; i++)
-  {
-    div_t coord;
-    coord = div(i,N);
 
-    outfile_evec1 << h*coord.rem << "   " << h*coord.quot << "   " << evectors(i,1).real() << endl;
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,1).real() << endl;
+    }
   }
 
   outfile_evec1.close();
@@ -353,16 +366,17 @@ int main()
   ofstream outfile_evec2;
   outfile_evec2.open("eigenvectors1.dat");
 
-  for(int i=0; i<leng; i++)
+  for(int i=0; i<Ntot; i++)
   {
-    div_t coord;
-    coord = div(i,N);
-
-    outfile_evec2 << h*coord.rem << "   " << h*coord.quot << "   " << evectors(i,0).real() << endl;
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,0).real() << endl;
+    }
   }
 
   outfile_evec2.close();
-*/
+
 
 
 
