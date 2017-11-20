@@ -53,6 +53,7 @@ int main()
   double L = 1.7;
   double h = 0.0049;
   int Ntot = int(L/h);
+  cout << Ntot << endl;
 
   cout << "ficheiro de regiao?" << endl;
   string filename;
@@ -221,10 +222,9 @@ int main()
     }
   }
 
-  cout << "BATATA" << endl;
 
-//Algoritmo para descobrir o sistema de vales da solucao (nao adaptado ao metodo geral)
-  int vale[Ntot][Ntot];
+//Algoritmo para descobrir o sistema de vales da solucao; o algoritmo percorre os percursos de maior declive desde a vizinhanca dos maximos ate a minimos locais
+/*  int vale[Ntot][Ntot];
 
   for(int i=0; i<Ntot; i++)
     for(int j=0; j<Ntot; j++)
@@ -265,28 +265,97 @@ int main()
         vale[pos.first][pos.second] += 1;
       }
     }
+  }*/
+
+
+//Algoritmo para vale versao 2: fazer o mesmo mas para todos os pontos com valores nao nulos
+  int vale[Ntot][Ntot];
+  double *W = new double[leng];
+  for(int i=0; i<leng; i++)
+    W[i]=1/x(i);
+
+
+  for(int i=0; i<Ntot; i++)
+    for(int j=0; j<Ntot; j++)
+      vale[i][j] = 0;
+
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int k=0; k<Ntot; k++)
+    {
+      if(grid[k][i].second==2)
+      {
+        bool notmin = true;
+        pair<int,int> pos = make_pair(i,k);
+        if(grid[pos.second][pos.first].second>=1)
+        {
+          while(notmin)
+          {
+            int posx = pos.first;
+            int posy = pos.second;
+          if(grid[posy][posx].second!=2)
+          {
+              break;
+          }
+            pair<int,int> newpos = pos;
+  
+            pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+  
+            for(int j=0; j<8; j++)
+            {
+              if(W[grid[newpos.second][newpos.first].first]>W[grid[viz[j].second][viz[j].first].first])
+                newpos = viz[j];
+            }
+            if(pos == newpos)
+            {
+              notmin = false;
+              break;
+            }
+  
+            if(!notmin)
+              break;
+            pos = newpos;
+            vale[pos.first][pos.second] += 1;
+          }
+        }
+      }
+    }
   }
 
 
-  cout << "nao cheguei aqui" << endl;
+
+
+//Algoritmo de \"watershed\"
+
+
+//  double *W = new double(leng);
+//  for(int i=0; i<leng; i++)
+//    W[i]=x(i);
+
+  
+
 
 //escrever coisas em ficheiros
 
 //Escrever solucao para ficheiro
   ofstream outfile;
   outfile.open("sol.dat");
+  int contador=0;
   for(int i=0; i<Ntot; i++)
   {
     for(int j=0; j<Ntot; j++)
     {
-      if(grid[i][j].second==2)
-        outfile << h*j << "   " << h*i << "   " << x[grid[i][j].first] << endl;
-      else if(grid[i][j].second==1)
-        outfile << h*j << "   " << h*i << "   " << 0 << endl;
+      if(grid[j][i].second==2)
+        outfile << h*i << "   " << h*j << "   " << x[grid[j][i].first] << endl;
+      else if(grid[j][i].second<=1)
+        outfile << h*i << "   " << h*j << "   " << 0 << endl;
+      contador++;
     }
+    outfile << endl;
   }
   outfile.close();
   cout << "escrevi a solucao para um ficheiro" << endl;
+  cout << contador << endl;
 
 //Imprimir maximos/minimos para ficheiro
   ofstream outfilemax;
