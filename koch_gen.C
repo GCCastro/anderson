@@ -10,7 +10,7 @@ using namespace std;
 int main()
 {
 
-  double L = 1.6;
+  double L = 1.7;
   double l = 1.;
   int iters = 6;
   double i_square = L/2-l/2;
@@ -52,7 +52,7 @@ int main()
 
 //Verificar se cada ponto esta dentro ou fora do quadrado de Koch
 
-  double h = 0.0039;
+  double h = 0.009;
   int N = (int)(L/h);
   int leng = N*N;
   int npoints = verts.size();

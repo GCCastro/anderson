@@ -10,12 +10,12 @@ using namespace std;
 int main()
 {
 
-  double L = 1.6;
+  double L = 1.7;
   double l = 1.;
 
 //Verificar se cada ponto esta dentro ou fora do quadrado de Koch
 
-  double h = 0.0039;
+  double h = 0.0049;
   int N = (int)(L/h);
   int leng = N*N;
 
@@ -35,21 +35,21 @@ int main()
       grid[i] = 0;
     else if(x<h || x>L-2*h || y>L-2*h || y<h)
       grid[i] = 1;
-    else if(x>2./5.*L-5*h && x<2./5.*L+5*h && y>3./4.*L-5*h && y<3./4.*L+5*h)
+    else if(x>2./5.*L-3*h && x<2./5.*L+3*h && y>3./4.*L-3*h && y<3./4.*L+3*h)
       grid[i] = 1;
-    else if(x>1./5.*L-5*h && x<1./5.*L+5*h && y>3./5.*L-5*h && y<3./5.*L+5*h)
+    else if(x>1./5.*L-3*h && x<1./5.*L+3*h && y>3./5.*L-3*h && y<3./5.*L+3*h)
       grid[i] = 1;
-    else if(x>4./5.*L && y>2./3.*L-5*h && y<2./3.*L+5*h)
+    else if(x>4./5.*L && y>2./3.*L-3*h && y<2./3.*L+3*h)
       grid[i] = 1;
-    else if(x>2./5.*L && y>2./5.*L-5*h && y<2./5.*L+5*h)
+    else if(x>2./5.*L && y>2./5.*L-3*h && y<2./5.*L+3*h)
       grid[i] = 1;
-    else if(x>1./2.*L && y>1./3.*L-5*h && y<1./3.*L+5*h)
+    else if(x>1./2.*L && y>1./3.*L-3*h && y<1./3.*L+3*h)
       grid[i] = 1;
-    else if(x>2./5.*L && x<1./2.*L && y>1./5.*L-5*h && y<1./5.*L+5*h)
+    else if(x>2./5.*L && x<1./2.*L && y>1./5.*L-3*h && y<1./5.*L+3*h)
       grid[i] = 1;
-    else if(x>2./5.*L-5*h && x<2./5.*L+5*h && y>1./5.*L-5*h && y<2./5.*L+5*h)
+    else if(x>2./5.*L-3*h && x<2./5.*L+3*h && y>1./5.*L-3*h && y<2./5.*L+3*h)
       grid[i] = 1;
-    else if(x>1./2.*L-5*h && x<1./2.*L+5*h && y>1./5.*L-5*h && y<1./3.*L+5*h)
+    else if(x>1./2.*L-3*h && x<1./2.*L+3*h && y>1./5.*L-3*h && y<1./3.*L+3*h)
       grid[i] = 1;
     else
       grid[i] = 2;
