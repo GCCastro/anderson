@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include <vector>
+#include <tuple>
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
 
@@ -28,6 +29,13 @@ double f(double h, int xi, int yj, int N, int **a, int D)
 
   return a[x][y];
 }
+
+
+bool sort_function(pair<int,int> pair1,pair<int,int> pair2)
+{
+  return (pair1.first<pair2.first);
+}
+
 
 int main()
 {
@@ -55,7 +63,7 @@ int main()
   int Ntot = int(L/h);
   cout << Ntot << endl;
 
-  cout << "ficheiro de regiao?" << endl;
+  cout << "ficheiro da regiao?" << endl;
   string filename;
   cin >> filename;
 
@@ -94,6 +102,8 @@ int main()
     xold=xf;
   }
   grid.push_back(line);
+
+  
 
 
   int Nmodos = 5;
@@ -138,6 +148,7 @@ int main()
   {
     for(int j=0;j<Ntot;j++) //loop dentro da linha
     {
+
       if(grid[i][j].second==2)
       {
         T entry1(grid[i][j].first,grid[i][j].first,4+h*h*f(h,j,i,Ntot,a,D));
@@ -164,6 +175,7 @@ int main()
 	}
   
         b[grid[i][j].first] = h*h;
+
 
       }
     }
@@ -192,8 +204,74 @@ int main()
   cout << "sobrevivi a calcular o u" << endl;
 
 
-//Algoritmo para descobrir maximos/minimos da solucao
+//Algoritmo para descobrir minimos da solucao
   bool vizflag = false;
+  vector<pair<int,int>> minpoints;
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[j][i].second > 1)
+      {
+        pair<int,int> viz[8] = {make_pair(i,j+1),make_pair(i,j-1),make_pair(i-1,j+1),make_pair(i-1,j-1),make_pair(i+1,j+1),make_pair(i+1,j-1),make_pair(i-1,j),make_pair(i+1,j)};
+        for(int k=0; k<8; k++)
+          if(x(grid[viz[k].second][viz[k].first].first)<x(grid[j][i].first)) //se estiver < estou a descobrir minimos; isto nao vai nada correr mal...
+          {
+            vizflag = true;
+            break;
+          }
+        if(vizflag)
+        {
+          vizflag=false;
+          continue;
+        }
+        // se quiser os maximos/minimos uso este
+        minpoints.push_back(make_pair(i,j));
+        //se quiser os pontos a volta dos maximos/minimos uso este
+        //for(int v=0; v<8; v++)
+        //  minpoints.push_back(viz[v]);
+      }
+    }
+  }
+
+//  int imin=0;
+//  pair<int,int> minabs=minpoints[0];
+//  for(int i=1; i<minpoints.size(); i++)
+//  {
+//    if(x(grid[minabs.second][minabs.first].first)>x(grid[minpoints[i].second][minpoints[i].first].first))
+//    {
+//      imin = i;
+//      minabs = minpoints[i];
+//    }
+//  }
+//  cout << x(grid[minpoints[imin].second][minpoints[imin].first].first) << endl;
+//  minpoints.erase(minpoints.begin()+imin);
+//  for(int i=1; i<minpoints.size(); i++)
+//  {
+//    if(x(grid[minabs.second][minabs.first].first)>x(grid[minpoints[i].second][minpoints[i].first].first))
+//    {
+//      imin = i;
+//      minabs = minpoints[i];
+//    }
+//  }
+
+//  for(int i=0; i<minpoints.size(); i++)
+//  {
+//    cout << x(grid[minpoints[i].second][minpoints[i].first].first) << endl;
+//  }
+
+//Imprimir maximos/minimos para ficheiro
+  ofstream outfilemin;
+  outfilemin.open("min.dat");
+  for(int i=0; i<minpoints.size(); i++)
+  {
+    outfilemin << minpoints[i].first*h << "   " << minpoints[i].second*h << endl;
+  }
+  outfilemin.close();
+
+
+//Algoritmo para descobrir maximos/minimos da solucao
+  vizflag = false;
   vector<pair<int,int>> maxpoints;
   for(int i=0; i<Ntot; i++)
   {
@@ -323,16 +401,118 @@ int main()
   }
 
 
-
-
 //Algoritmo de \"watershed\"
+  /*cout << "o algoritmo de watershed comeca aqui" << endl;
 
 
-//  double *W = new double(leng);
+//  double *W = new double(leng);  //Feito mais acima
 //  for(int i=0; i<leng; i++)
 //    W[i]=x(i);
 
-  
+  map<int,pair<int,int>> idtocoord;
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[j][i].second==2)
+        idtocoord[grid[j][i].first] = make_pair(i,j);
+    }
+  }
+  vector<pair<int,int>> vals;
+  for(int i=0; i<leng; i++)
+  {
+    vals.push_back(make_pair(i,0));
+  }
+
+  for(int i=0; i<minpoints.size(); i++)
+  {
+    vals[grid[minpoints[i].second][minpoints[i].first].first].second = i+1;
+  }
+  sort(vals.begin(),vals.end(),[&x](pair<int,int> pair1,pair<int,int> pair2) -> bool {return x(pair2.first) > x(pair1.first);});
+
+  bool minflag = false;
+
+  for(int i=0; i<vals.size(); i++)
+  {
+    int id = vals[i].first;
+    int coordx = idtocoord[id].first;
+    int coordy = idtocoord[id].second;
+    for(int j=0; j<minpoints.size(); j++)
+    {
+      if(id == grid[minpoints[j].second][minpoints[j].first].first)
+      {
+        minflag = true;
+        break;
+      }
+    }
+    if(minflag)
+    {
+      minflag=false;
+      continue;
+    }
+    pair<int,int> vizs[8] = {make_pair(coordx+1,coordy+1),make_pair(coordx,coordy+1),make_pair(coordx-1,coordy+1),make_pair(coordx+1,coordy),make_pair(coordx-1,coordy),make_pair(coordx+1,coordy-1),make_pair(coordx,coordy-1),make_pair(coordx-1,coordy-1)};
+
+    vector<int> labels;
+    bool lab_flag = false;
+    for(int j=0; j<8; j++)
+    {
+      if(grid[vizs[j].second][vizs[j].first].second==2)
+      {
+        int lab = vals[grid[vizs[j].second][vizs[j].first].first].second;
+        if(lab==0 || lab==1000){continue;}
+	for(int k=0; k<labels.size(); k++)
+	{
+          if(labels[k]==lab)
+	  {
+            lab_flag=true;
+	    break;
+	  }
+	}
+	if(lab_flag)
+	{
+          lab_flag = false;
+	  continue;
+	}
+	else
+          labels.push_back(lab);
+      }
+    }
+    if(labels.size()>=2)
+    {
+      vals[i].second=0;
+    }
+    else if(labels.empty())
+    {
+      vals[i].second=1000;
+    }
+    else
+    {
+      cout << "BATATA  " << labels[0] << endl;
+      vals[i].second=labels[0];
+    }
+  }
+  cout << "o algoritmo de watershed acaba aqui" << endl;*/
+
+
+//o outro algoritmo para o vale
+  vector<tuple<int,int,double>> vale3;
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=1; j<Ntot-1; j++)
+    {
+      if(x(grid[j][i].first)<x(grid[j-1][i].first) && x(grid[j][i].first)<x(grid[j+1][i].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+    }
+  }
+  for(int j=0; j<Ntot; j++)
+  {
+    for(int i=1; i<Ntot-1; i++)
+    {
+      if(x(grid[j][i].first)<x(grid[j][i-1].first) && x(grid[j][i].first)<x(grid[j][i+1].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+    }
+  }
+
 
 
 //escrever coisas em ficheiros
@@ -365,6 +545,9 @@ int main()
     outfilemax << maxpoints[i].first*h << "   " << maxpoints[i].second*h << endl;
   }
   outfilemax.close();
+
+
+
 
 //  Eigen::MatrixXd Adense;
 //  Adense = Eigen::MatrixXd(A);
@@ -409,6 +592,31 @@ int main()
   outfilevale.close();
 
 
+
+////Escrever vale para ficheiro
+//  ofstream outfilevale2;
+//  outfilevale2.open("vale2.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[j][i].second == 2)
+//        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << vals[grid[j][i].first].second << endl;
+//      else
+//        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << 0 << endl;
+//    }
+//  outfilevale2.close();
+
+
+//Escrever vale para ficheiro
+  ofstream outfilevale3;
+  outfilevale3.open("vale3.dat");
+
+  for(int i=0; i<vale3.size(); i++)
+  {
+    outfilevale3 << get<0>(vale3[i])*h << "   " << get<1>(vale3[i])*h << "   " << get<2>(vale3[i]) << endl;
+  }
+  outfilevale3.close();
 
 //Calculo de valores e vectores proprios
 
