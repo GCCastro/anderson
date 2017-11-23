@@ -52,7 +52,7 @@ int main()
 
 //Verificar se cada ponto esta dentro ou fora do quadrado de Koch
 
-  double h = 0.009;
+  double h = 0.0049;
   int N = (int)(L/h);
   int leng = N*N;
   int npoints = verts.size();

@@ -1,0 +1,1 @@
+plot "sol1D.dat" using 1:(400*($2)) ps 0.1 w lines, "eigenvectors0_1d.dat" using 1:(abs($2)) ps 0.1 w lines,"eigenvectors1_1d.dat" using 1:(abs($2)) ps 0.1 w lines,"eigenvectors2_1d.dat" using 1:(abs($2)) ps 0.1 w lines,"eigenvectors3_1d.dat" using 1:(abs($2)) ps 0.1 w lines,"eigenvectors4_1d.dat" using 1:(abs($2)) ps 0.1 w lines

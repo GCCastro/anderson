@@ -272,7 +272,7 @@ int main()
 //Calculo de valores e vectores proprios
 
   /*SparseGenMatProd<double> op(A);
-  GenEigsSolver< double, LARGEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+3);
+  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+3);
   eigs.init();
   int nconv = eigs.compute();
 

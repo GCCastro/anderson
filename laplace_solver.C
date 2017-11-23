@@ -28,6 +28,7 @@ double f(double h, int xi, int yj, int N, int **a, int D)
   int y = (int)((double)yj/((double)N)*D);
 
   return a[x][y];
+  //return 0.;
 }
 
 
@@ -103,10 +104,9 @@ int main()
   }
   grid.push_back(line);
 
-  
 
 
-  int Nmodos = 5;
+  int Nmodos = 1;
 
   vector<T> coefficients;
 
@@ -148,7 +148,7 @@ int main()
   {
     for(int j=0;j<Ntot;j++) //loop dentro da linha
     {
-
+      cout << j << "  " << i << endl;
       if(grid[i][j].second==2)
       {
         T entry1(grid[i][j].first,grid[i][j].first,4+h*h*f(h,j,i,Ntot,a,D));
@@ -401,9 +401,13 @@ int main()
   }
 
 
-//Algoritmo de \"watershed\"
-  /*cout << "o algoritmo de watershed comeca aqui" << endl;
 
+
+
+
+
+//Algoritmo de \"watershed\"
+  cout << "o algoritmo de watershed comeca aqui" << endl;
 
 //  double *W = new double(leng);  //Feito mais acima
 //  for(int i=0; i<leng; i++)
@@ -428,7 +432,7 @@ int main()
   {
     vals[grid[minpoints[i].second][minpoints[i].first].first].second = i+1;
   }
-  sort(vals.begin(),vals.end(),[&x](pair<int,int> pair1,pair<int,int> pair2) -> bool {return x(pair2.first) > x(pair1.first);});
+  sort(vals.begin(),vals.end(),[&W](pair<int,int> pair1,pair<int,int> pair2) -> bool {return W[pair2.first] > W[pair1.first];});
 
   bool minflag = false;
 
@@ -447,6 +451,7 @@ int main()
     }
     if(minflag)
     {
+      cout << "BATATA MINIMA" << endl;
       minflag=false;
       continue;
     }
@@ -460,20 +465,20 @@ int main()
       {
         int lab = vals[grid[vizs[j].second][vizs[j].first].first].second;
         if(lab==0 || lab==1000){continue;}
-	for(int k=0; k<labels.size(); k++)
-	{
+        for(int k=0; k<labels.size(); k++)
+        {
           if(labels[k]==lab)
-	  {
+          {
             lab_flag=true;
-	    break;
-	  }
-	}
-	if(lab_flag)
-	{
+            break;
+          }
+        }
+        if(lab_flag)
+        {
           lab_flag = false;
-	  continue;
-	}
-	else
+          continue;
+        }
+        else
           labels.push_back(lab);
       }
     }
@@ -487,11 +492,19 @@ int main()
     }
     else
     {
-      cout << "BATATA  " << labels[0] << endl;
+      //cout << "BATATA  " << labels[0] << endl;
       vals[i].second=labels[0];
     }
+    //if(i<50)
+    //{
+    //  cout << coordx << "  " << coordy << "  " << W[id] << "  " << vals[i].second << endl;
+    //}
+
   }
-  cout << "o algoritmo de watershed acaba aqui" << endl;*/
+  cout << "o algoritmo de watershed acaba aqui" << endl;
+
+
+
 
 
 //o outro algoritmo para o vale
@@ -593,19 +606,19 @@ int main()
 
 
 
-////Escrever vale para ficheiro
-//  ofstream outfilevale2;
-//  outfilevale2.open("vale2.dat");
-//
-//  for(int i=0; i<Ntot; i++)
-//    for(int j=0; j<Ntot; j++)
-//    {
-//      if(grid[j][i].second == 2)
-//        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << vals[grid[j][i].first].second << endl;
-//      else
-//        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << 0 << endl;
-//    }
-//  outfilevale2.close();
+//Escrever vale para ficheiro
+  ofstream outfilevale2;
+  outfilevale2.open("vale2.dat");
+
+  for(int i=0; i<Ntot; i++)
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[j][i].second == 2)
+        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << vals[grid[j][i].first].second << endl;
+      else
+        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << 0 << endl;
+    }
+  outfilevale2.close();
 
 
 //Escrever vale para ficheiro
@@ -622,7 +635,7 @@ int main()
 
   SparseGenMatProd<double> op(A);
   cout << "BATATA1" << endl;
-  GenEigsSolver< double, LARGEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+3);
+  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+30);
   cout << "BATATA2" << endl;
   eigs.init();
   cout << "BATATA3" << endl;
@@ -649,8 +662,10 @@ int main()
 
   outfile_ev.close();
 
-  cout << "valor proprio 1 estado excitado: " << evalues(0) << endl;
-  cout << "valor proprio fundamental: " << evalues(1) << endl;
+//  cout << "valor proprio 1 estado excitado: " << evalues(0) << endl;
+//  cout << "valor proprio fundamental: " << evalues(1) << endl;
+  cout << "valor proprio fundamental: " << evalues(0) << endl;
+
 
   Eigen::MatrixXcd evectors = eigs.eigenvectors();
 
@@ -675,70 +690,70 @@ int main()
   outfile_evec0.close();
 
 
-  ofstream outfile_evec1;
-  outfile_evec1.open("eigenvectors1.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real() << endl;
-    }
-  }
-
-  outfile_evec1.close();
-
-  cout << "escrevi o segundo vector proprio" << endl;
-
-  ofstream outfile_evec2;
-  outfile_evec2.open("eigenvectors2.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real() << endl;
-    }
-  }
-
-  outfile_evec2.close();
-
-  cout << "escrevi o terceiro vector proprio" << endl;
-
-
-  ofstream outfile_evec3;
-  outfile_evec3.open("eigenvectors3.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real() << endl;
-    }
-  }
-
-  outfile_evec3.close();
-
-  cout << "escrevi o quarto vector proprio" << endl;
-
-  ofstream outfile_evec4;
-  outfile_evec4.open("eigenvectors4.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real() << endl;
-    }
-  }
-
-  outfile_evec4.close();
-
-  cout << "escrevi o quinto vector proprio" << endl;
+//  ofstream outfile_evec1;
+//  outfile_evec1.open("eigenvectors1.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real() << endl;
+//    }
+//  }
+//
+//  outfile_evec1.close();
+//
+//  cout << "escrevi o segundo vector proprio" << endl;
+//
+//  ofstream outfile_evec2;
+//  outfile_evec2.open("eigenvectors2.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real() << endl;
+//    }
+//  }
+//
+//  outfile_evec2.close();
+//
+//  cout << "escrevi o terceiro vector proprio" << endl;
+//
+//
+//  ofstream outfile_evec3;
+//  outfile_evec3.open("eigenvectors3.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real() << endl;
+//    }
+//  }
+//
+//  outfile_evec3.close();
+//
+//  cout << "escrevi o quarto vector proprio" << endl;
+//
+//  ofstream outfile_evec4;
+//  outfile_evec4.open("eigenvectors4.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real() << endl;
+//    }
+//  }
+//
+//  outfile_evec4.close();
+//
+//  cout << "escrevi o quinto vector proprio" << endl;
 
 
 
