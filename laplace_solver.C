@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <tuple>
+#include <set>
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
 
@@ -106,7 +107,7 @@ int main()
 
 
 
-  int Nmodos = 1;
+  int Nmodos = 5;
 
   vector<T> coefficients;
 
@@ -148,33 +149,32 @@ int main()
   {
     for(int j=0;j<Ntot;j++) //loop dentro da linha
     {
-      cout << j << "  " << i << endl;
       if(grid[i][j].second==2)
       {
-        T entry1(grid[i][j].first,grid[i][j].first,4+h*h*f(h,j,i,Ntot,a,D));
+        T entry1(grid[i][j].first,grid[i][j].first,4./h/h+f(h,j,i,Ntot,a,D));
         coefficients.push_back(entry1);
         if(grid[i][j+1].second==2)
 	{
-          T entry2(grid[i][j].first,grid[i][j+1].first,-1);
+          T entry2(grid[i][j].first,grid[i][j+1].first,-1./h/h);
           coefficients.push_back(entry2);
 	}
         if(grid[i][j-1].second==2)
 	{
-          T entry3(grid[i][j].first,grid[i][j-1].first,-1);
+          T entry3(grid[i][j].first,grid[i][j-1].first,-1./h/h);
           coefficients.push_back(entry3);
 	}
         if(grid[i+1][j].second==2)
 	{
-          T entry4(grid[i][j].first,grid[i+1][j].first,-1);
+          T entry4(grid[i][j].first,grid[i+1][j].first,-1./h/h);
           coefficients.push_back(entry4);
 	}
         if(grid[i-1][j].second==2)
 	{
-          T entry5(grid[i][j].first,grid[i-1][j].first,-1);
+          T entry5(grid[i][j].first,grid[i-1][j].first,-1./h/h);
           coefficients.push_back(entry5);
 	}
   
-        b[grid[i][j].first] = h*h;
+        b[grid[i][j].first] = 1.;
 
 
       }
@@ -270,7 +270,7 @@ int main()
   outfilemin.close();
 
 
-//Algoritmo para descobrir maximos/minimos da solucao
+//Algoritmo para descobrir maximos da solucao
   vizflag = false;
   vector<pair<int,int>> maxpoints;
   for(int i=0; i<Ntot; i++)
@@ -292,17 +292,17 @@ int main()
           continue;
         }
         // se quiser os maximos/minimos uso este
-        //maxpoints.push_back(i);
+        maxpoints.push_back(make_pair(i,j));
         //se quiser os pontos a volta dos maximos/minimos uso este
-        for(int v=0; v<8; v++)
-          maxpoints.push_back(viz[v]);
+        //for(int v=0; v<8; v++)
+        //  maxpoints.push_back(viz[v]);
       }
     }
   }
 
 
 //Algoritmo para descobrir o sistema de vales da solucao; o algoritmo percorre os percursos de maior declive desde a vizinhanca dos maximos ate a minimos locais
-/*  int vale[Ntot][Ntot];
+  /*int vale[Ntot][Ntot];
 
   for(int i=0; i<Ntot; i++)
     for(int j=0; j<Ntot; j++)
@@ -405,9 +405,8 @@ int main()
 
 
 
-
 //Algoritmo de \"watershed\"
-  cout << "o algoritmo de watershed comeca aqui" << endl;
+  /*cout << "o algoritmo de watershed comeca aqui" << endl;
 
 //  double *W = new double(leng);  //Feito mais acima
 //  for(int i=0; i<leng; i++)
@@ -428,9 +427,9 @@ int main()
     vals.push_back(make_pair(i,0));
   }
 
-  for(int i=0; i<minpoints.size(); i++)
+  for(int i=0; i<maxpoints.size(); i++)
   {
-    vals[grid[minpoints[i].second][minpoints[i].first].first].second = i+1;
+    vals[grid[maxpoints[i].second][maxpoints[i].first].first].second = i+1;
   }
   sort(vals.begin(),vals.end(),[&W](pair<int,int> pair1,pair<int,int> pair2) -> bool {return W[pair2.first] > W[pair1.first];});
 
@@ -441,9 +440,9 @@ int main()
     int id = vals[i].first;
     int coordx = idtocoord[id].first;
     int coordy = idtocoord[id].second;
-    for(int j=0; j<minpoints.size(); j++)
+    for(int j=0; j<maxpoints.size(); j++)
     {
-      if(id == grid[minpoints[j].second][minpoints[j].first].first)
+      if(id == grid[maxpoints[j].second][maxpoints[j].first].first)
       {
         minflag = true;
         break;
@@ -501,30 +500,158 @@ int main()
     //}
 
   }
-  cout << "o algoritmo de watershed acaba aqui" << endl;
+  cout << "o algoritmo de watershed acaba aqui" << endl;*/
 
 
+
+
+
+
+
+
+
+//Algoritmo de watershed + anterior
+  map<int,pair<int,int>> idtocoord;
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[j][i].second==2)
+        idtocoord[grid[j][i].first] = make_pair(i,j);
+    }
+  }
+  vector<pair<int,int>> vals;
+  for(int i=0; i<leng; i++)
+  {
+    vals.push_back(make_pair(i,0));
+  }
+
+  for(int i=0; i<maxpoints.size(); i++)
+  {
+    vals[grid[maxpoints[i].second][maxpoints[i].first].first].second = i+1;
+  }
+
+  for(int i=0; i<vals.size(); i++)
+  {
+    bool notmin = true;
+    pair<int,int> pos = idtocoord[vals[i].first];
+    int posxi = pos.first;
+    int posyi = pos.second;
+
+    if(grid[pos.second][pos.first].second==2)
+    {
+      while(notmin)
+      {
+        int posx = pos.first;
+        int posy = pos.second;
+        if(grid[posy][posx].second!=2)
+        {
+          break;
+        }
+        pair<int,int> newpos = pos;
+
+        pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+
+        for(int j=0; j<8; j++)
+        {
+          if(W[grid[newpos.second][newpos.first].first]>W[grid[viz[j].second][viz[j].first].first])
+            newpos = viz[j];
+        }
+        if(pos == newpos)
+        {
+          notmin = false;
+        }
+
+        if(!notmin)
+	{
+          for(int k=0; k<maxpoints.size(); k++)
+	  {
+            if(maxpoints[k]==pos)
+	    {
+              vals[i].second = vals[grid[posy][posx].first].second;
+              break;
+            }
+          }
+          //vals[i].second = 1000;
+	  //cout << posx << "  " << posy << endl;
+          break;
+	}
+        pos = newpos;
+      }
+    }
+  }
+
+
+  vector<tuple<int,int,double>> valley;
+  for(int i=0; i<vals.size(); i++)
+  {
+    pair<int,int> pos = idtocoord[vals[i].first];
+    int posx = pos.first;
+    int posy = pos.second;
+    pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+    set<int> labs;
+    labs.insert(vals[i].second);
+    for(int j=0; j<8; j++)
+      labs.insert(vals[grid[viz[j].second][viz[j].first].first].second);
+    if(labs.size()>=2)
+      valley.push_back(make_tuple(posx,posy,x(grid[posy][posx].first)));
+  }
 
 
 
 //o outro algoritmo para o vale
   vector<tuple<int,int,double>> vale3;
-  for(int i=0; i<Ntot; i++)
+  for(int i=2; i<Ntot-2; i++)
   {
-    for(int j=1; j<Ntot-1; j++)
+    for(int j=2; j<Ntot-2; j++)
     {
       if(x(grid[j][i].first)<x(grid[j-1][i].first) && x(grid[j][i].first)<x(grid[j+1][i].first))
         vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-    }
-  }
-  for(int j=0; j<Ntot; j++)
-  {
-    for(int i=1; i<Ntot-1; i++)
-    {
       if(x(grid[j][i].first)<x(grid[j][i-1].first) && x(grid[j][i].first)<x(grid[j][i+1].first))
         vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j-1][i-1].first) && x(grid[j][i].first)<x(grid[j+1][i+1].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j-1][i+1].first) && x(grid[j][i].first)<x(grid[j+1][i-1].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+
+      if(x(grid[j][i].first)<x(grid[j-2][i].first) && x(grid[j][i].first)<x(grid[j+2][i].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j][i-2].first) && x(grid[j][i].first)<x(grid[j][i+2].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+
+      if(x(grid[j][i].first)<x(grid[j-2][i-1].first) && x(grid[j][i].first)<x(grid[j+2][i+1].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j-1][i-2].first) && x(grid[j][i].first)<x(grid[j+1][i+2].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j+2][i-1].first) && x(grid[j][i].first)<x(grid[j-2][i+1].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+      if(x(grid[j][i].first)<x(grid[j-1][i+2].first) && x(grid[j][i].first)<x(grid[j+1][i-2].first))
+        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+
+
     }
   }
+
+//Ainda outro algoritmo par ao vale -> atraves de derivadas
+  vector<tuple<int,int,double>> vale4;
+  for(int i=1; i<Ntot-1; i++)
+  {
+    for(int j=1; j<Ntot-1; j++)
+    {
+      if((abs((x(grid[j+1][i].first)-x(grid[j-1][i].first))/x(grid[j][i].first))<0.05 || abs((x(grid[j][i+1].first)-x(grid[j][i-1].first))/x(grid[j][i].first))<0.05) && !((x(grid[j+1][i].first)<x(grid[j][i].first) && x(grid[j-1][i].first)<x(grid[j][i].first)) || (x(grid[j][i-1].first)<x(grid[j][i].first) && x(grid[j][i-1].first)<x(grid[j][i].first))))
+        vale4.push_back(make_tuple(i,j,x(grid[j][i].first)));
+    }
+  }
+
+
+//  for(int j=0; j<Ntot; j++)
+//  {
+//    for(int i=1; i<Ntot-1; i++)
+//    {
+//      if(x(grid[j][i].first)<x(grid[j][i-1].first) && x(grid[j][i].first)<x(grid[j][i+1].first))
+//        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
+//    }
+//  }
 
 
 
@@ -631,6 +758,28 @@ int main()
   }
   outfilevale3.close();
 
+
+//Escrever vale para ficheiro
+  ofstream outfilevale4;
+  outfilevale4.open("vale4.dat");
+
+  for(int i=0; i<vale4.size(); i++)
+  {
+    outfilevale4 << get<0>(vale4[i])*h << "   " << get<1>(vale4[i])*h << "   " << get<2>(vale4[i]) << endl;
+  }
+  outfilevale4.close();
+
+//Escrever vale para ficheiro - ultima versao
+  ofstream outfilevale5;
+  outfilevale5.open("valley.dat");
+
+  for(int i=0; i<valley.size(); i++)
+  {
+    outfilevale5 << get<0>(valley[i])*h << "   " << get<1>(valley[i])*h << "   " << get<2>(valley[i]) << endl;
+  }
+  outfilevale5.close();
+
+
 //Calculo de valores e vectores proprios
 
   SparseGenMatProd<double> op(A);
@@ -690,70 +839,70 @@ int main()
   outfile_evec0.close();
 
 
-//  ofstream outfile_evec1;
-//  outfile_evec1.open("eigenvectors1.dat");
-//
-//  for(int i=0; i<Ntot; i++)
-//  {
-//    for(int j=0; j<Ntot; j++)
-//    {
-//      if(grid[i][j].second>=1)
-//        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real() << endl;
-//    }
-//  }
-//
-//  outfile_evec1.close();
-//
-//  cout << "escrevi o segundo vector proprio" << endl;
-//
-//  ofstream outfile_evec2;
-//  outfile_evec2.open("eigenvectors2.dat");
-//
-//  for(int i=0; i<Ntot; i++)
-//  {
-//    for(int j=0; j<Ntot; j++)
-//    {
-//      if(grid[i][j].second>=1)
-//        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real() << endl;
-//    }
-//  }
-//
-//  outfile_evec2.close();
-//
-//  cout << "escrevi o terceiro vector proprio" << endl;
-//
-//
-//  ofstream outfile_evec3;
-//  outfile_evec3.open("eigenvectors3.dat");
-//
-//  for(int i=0; i<Ntot; i++)
-//  {
-//    for(int j=0; j<Ntot; j++)
-//    {
-//      if(grid[i][j].second>=1)
-//        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real() << endl;
-//    }
-//  }
-//
-//  outfile_evec3.close();
-//
-//  cout << "escrevi o quarto vector proprio" << endl;
-//
-//  ofstream outfile_evec4;
-//  outfile_evec4.open("eigenvectors4.dat");
-//
-//  for(int i=0; i<Ntot; i++)
-//  {
-//    for(int j=0; j<Ntot; j++)
-//    {
-//      if(grid[i][j].second>=1)
-//        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real() << endl;
-//    }
-//  }
-//
-//  outfile_evec4.close();
-//
-//  cout << "escrevi o quinto vector proprio" << endl;
+  ofstream outfile_evec1;
+  outfile_evec1.open("eigenvectors1.dat");
+
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real() << endl;
+    }
+  }
+
+  outfile_evec1.close();
+
+  cout << "escrevi o segundo vector proprio" << endl;
+
+  ofstream outfile_evec2;
+  outfile_evec2.open("eigenvectors2.dat");
+
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real() << endl;
+    }
+  }
+
+  outfile_evec2.close();
+
+  cout << "escrevi o terceiro vector proprio" << endl;
+
+
+  ofstream outfile_evec3;
+  outfile_evec3.open("eigenvectors3.dat");
+
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real() << endl;
+    }
+  }
+
+  outfile_evec3.close();
+
+  cout << "escrevi o quarto vector proprio" << endl;
+
+  ofstream outfile_evec4;
+  outfile_evec4.open("eigenvectors4.dat");
+
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real() << endl;
+    }
+  }
+
+  outfile_evec4.close();
+
+  cout << "escrevi o quinto vector proprio" << endl;
 
 
 
