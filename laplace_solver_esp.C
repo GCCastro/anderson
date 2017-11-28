@@ -75,7 +75,7 @@ int main()
 
   //isto devia vir directamente do ficheiro
   double L = 1.7;
-  double h = 0.0049;
+  double h = 0.0099;
   int Ntot = int(L/h);
   cout << Ntot << endl;
 
@@ -99,8 +99,7 @@ int main()
   vector<pair<int,int>> line;
   double xf,yf;
   int c;
-  int leng=0;
-  int bleng=0;
+  int leng=0;  //o leng neste ficheiro contem a fronteira
   double xold=0.;
 
 
@@ -111,17 +110,11 @@ int main()
       grid.push_back(line);
       line.clear();
     }
-    if(c==2)
+    if(c>=1)
     {
       pair<int,int> entry(leng,c);
       line.push_back(entry);
       leng++;
-    }
-    else if(c==1)
-    {
-      pair<int,int> entry(0,c);
-      line.push_back(entry);
-      bleng++;
     }
     else if(c==0)
     {
@@ -136,7 +129,7 @@ int main()
   }
   grid.push_back(line);
 
-
+  cout << "BATATA" << endl;
 
   int Nmodos = 10;
 
@@ -148,37 +141,53 @@ int main()
   {
     for(int j=0;j<Ntot;j++) //loop dentro da linha
     {
-      if(grid[i][j].second==2)
+      if(grid[i][j].second>=1)
       {
         T entry1(grid[i][j].first,grid[i][j].first,4./h/h+f(h,j,i,Ntot,a,D));
         coefficients.push_back(entry1);
-        if(grid[i][j+1].second==2)
+
+        int tmp1 = j+1;
+        if(tmp1==Ntot)
+          tmp1 = 0;
+        if(grid[i][tmp1].second>=1)
 	{
-          T entry2(grid[i][j].first,grid[i][j+1].first,-1./h/h);
+          T entry2(grid[i][j].first,grid[i][tmp1].first,-1./h/h);
           coefficients.push_back(entry2);
 	}
-        if(grid[i][j-1].second==2)
+
+        int tmp2 = j-1;
+        if(tmp2==-1)
+          tmp2 = Ntot-1;
+        if(grid[i][tmp2].second>=1)
 	{
-          T entry3(grid[i][j].first,grid[i][j-1].first,-1./h/h);
+          T entry3(grid[i][j].first,grid[i][tmp2].first,-1./h/h);
           coefficients.push_back(entry3);
 	}
-        if(grid[i+1][j].second==2)
+
+        int tmp3 = i+1;
+        if(tmp3==Ntot)
+          tmp3 = 0;
+        if(grid[tmp3][j].second>=1)
 	{
-          T entry4(grid[i][j].first,grid[i+1][j].first,-1./h/h);
+          T entry4(grid[i][j].first,grid[tmp3][j].first,-1./h/h);
           coefficients.push_back(entry4);
 	}
-        if(grid[i-1][j].second==2)
+
+        int tmp4 = i-1;
+        if(tmp4==-1)
+          tmp4 = Ntot-1;
+        if(grid[tmp4][j].second>=1)
 	{
-          T entry5(grid[i][j].first,grid[i-1][j].first,-1./h/h);
+          T entry5(grid[i][j].first,grid[tmp4][j].first,-1./h/h);
           coefficients.push_back(entry5);
 	}
   
         b[grid[i][j].first] = 1.;
-
-
       }
     }
   }
+
+  cout << "BATATA" << endl;
 
   SpMat A(leng,leng);
   A.setFromTriplets(coefficients.begin(),coefficients.end());
@@ -207,9 +216,22 @@ int main()
   {
     for(int j=0; j<Ntot; j++)
     {
-      if(grid[j][i].second > 1)
+      if(grid[j][i].second >= 1)
       {
-        pair<int,int> viz[8] = {make_pair(i,j+1),make_pair(i,j-1),make_pair(i-1,j+1),make_pair(i-1,j-1),make_pair(i+1,j+1),make_pair(i+1,j-1),make_pair(i-1,j),make_pair(i+1,j)};
+        int tmp1 = j+1;
+        if(tmp1==Ntot)
+          tmp1 = 0;
+        int tmp2 = j-1;
+        if(tmp2==-1)
+          tmp2 = Ntot-1;
+        int tmp3 = i+1;
+        if(tmp3==Ntot)
+          tmp3 = 0;
+        int tmp4 = i-1;
+        if(tmp4==-1)
+          tmp4 = Ntot-1;
+
+        pair<int,int> viz[8] = {make_pair(i,tmp1),make_pair(i,tmp2),make_pair(tmp4,tmp1),make_pair(tmp4,tmp2),make_pair(tmp3,tmp1),make_pair(tmp3,tmp2),make_pair(tmp4,j),make_pair(tmp3,j)};
         for(int k=0; k<8; k++)
           if(x(grid[viz[k].second][viz[k].first].first)<x(grid[j][i].first)) //se estiver < estou a descobrir minimos; isto nao vai nada correr mal...
           {
@@ -270,7 +292,20 @@ int main()
     {
       if(grid[j][i].second > 1)
       {
-        pair<int,int> viz[8] = {make_pair(i,j+1),make_pair(i,j-1),make_pair(i-1,j+1),make_pair(i-1,j-1),make_pair(i+1,j+1),make_pair(i+1,j-1),make_pair(i-1,j),make_pair(i+1,j)};
+        int tmp1 = j+1;
+        if(tmp1==Ntot)
+          tmp1 = 0;
+        int tmp2 = j-1;
+        if(tmp2==-1)
+          tmp2 = Ntot-1;
+        int tmp3 = i+1;
+        if(tmp3==Ntot)
+          tmp3 = 0;
+        int tmp4 = i-1;
+        if(tmp4==-1)
+          tmp4 = Ntot-1;
+
+        pair<int,int> viz[8] = {make_pair(i,tmp1),make_pair(i,tmp2),make_pair(tmp4,tmp1),make_pair(tmp4,tmp2),make_pair(tmp3,tmp1),make_pair(tmp3,tmp2),make_pair(tmp4,j),make_pair(tmp3,j)};
         for(int k=0; k<8; k++)
           if(x(grid[viz[k].second][viz[k].first].first)>x(grid[j][i].first)) //se estiver < estou a descobrir minimos; isto nao vai nada correr mal...
           {
@@ -303,7 +338,7 @@ int main()
   {
     for(int j=0; j<Ntot; j++)
     {
-      if(grid[j][i].second==2)
+      if(grid[j][i].second>=1)
         idtocoord[grid[j][i].first] = make_pair(i,j);
     }
   }
@@ -325,19 +360,32 @@ int main()
     int posxi = pos.first;
     int posyi = pos.second;
 
-    if(grid[pos.second][pos.first].second==2)
+    if(grid[pos.second][pos.first].second>=1)
     {
       while(notmin)
       {
         int posx = pos.first;
         int posy = pos.second;
-        if(grid[posy][posx].second!=2)
+        if(grid[posy][posx].second==0)
         {
           break;
         }
         pair<int,int> newpos = pos;
 
-        pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+        int tmp1 = posy+1;
+        if(tmp1==Ntot)
+          tmp1 = 0;
+        int tmp2 = posy-1;
+        if(tmp2==-1)
+          tmp2 = Ntot-1;
+        int tmp3 = posx+1;
+        if(tmp3==Ntot)
+          tmp3 = 0;
+        int tmp4 = posx-1;
+        if(tmp4==-1)
+          tmp4 = Ntot-1;
+
+        pair<int,int> viz[8] = {make_pair(posx,tmp1),make_pair(posx,tmp2),make_pair(tmp4,tmp1),make_pair(tmp4,tmp2),make_pair(tmp3,tmp1),make_pair(tmp3,tmp2),make_pair(tmp4,posy),make_pair(tmp3,posy)};
 
         for(int j=0; j<8; j++)
         {
@@ -375,7 +423,22 @@ int main()
     pair<int,int> pos = idtocoord[vals[i].first];
     int posx = pos.first;
     int posy = pos.second;
-    pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+
+    int tmp1 = posy+1;
+    if(tmp1==Ntot)
+      tmp1 = 0;
+    int tmp2 = posy-1;
+    if(tmp2==-1)
+      tmp2 = Ntot-1;
+    int tmp3 = posx+1;
+    if(tmp3==Ntot)
+      tmp3 = 0;
+    int tmp4 = posx-1;
+    if(tmp4==-1)
+      tmp4 = Ntot-1;
+
+    pair<int,int> viz[8] = {make_pair(posx,tmp1),make_pair(posx,tmp2),make_pair(tmp4,tmp1),make_pair(tmp4,tmp2),make_pair(tmp3,tmp1),make_pair(tmp3,tmp2),make_pair(tmp4,posy),make_pair(tmp3,posy)};
+
     set<int> labs;
     labs.insert(vals[i].second);
     for(int j=0; j<8; j++)
@@ -396,7 +459,7 @@ int main()
   {
     for(int j=0; j<Ntot; j++)
     {
-      if(grid[j][i].second==2)
+      if(grid[j][i].second>=1)
         outfile << h*i << "   " << h*j << "   " << x[grid[j][i].first] << endl;
       else if(grid[j][i].second<=1)
         outfile << h*i << "   " << h*j << "   " << 0 << endl;

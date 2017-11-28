@@ -12,6 +12,9 @@ All:laplace
 laplace: laplace_solver.o rtnorm.o
 	$(CC) -o a $^ $(SPECTRA) $(RTNORM) $(LIB)
 
+esp: laplace_solver_esp.o rtnorm.o
+	$(CC) -o esp $^ $(SPECTRA) $(RTNORM) $(LIB)
+
 1d: loc_1d.o rtnorm.o
 	$(CC) -o 1d $^ $(SPECTRA) $(RTNORM) $(LIB)
 
@@ -26,6 +29,10 @@ square: laplace_solver_square.o
 
 laplace_solver_square.o: laplace_solver_square.C
 	$(CC) $(CFLAGS) $^ $(SPECTRA)
+
+laplace_solver_esp.o: laplace_solver_esp.C
+	$(CC) $(CFLAGS) $^ $(SPECTRA) $(RTNORM)
+
 
 rtnorm.o: $(SRC1)
 	$(CC) $(CFLAGS) $^
