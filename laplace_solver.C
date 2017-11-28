@@ -17,13 +17,17 @@
 #include <vector>
 #include <tuple>
 #include <set>
+
+#include <gsl/gsl_rng.h>  //random generator
+#include "rtnorm.hpp"     //truncated normal distribution
+
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
 
 using namespace std;
 using namespace Spectra;
 
-double f(double h, int xi, int yj, int N, int **a, int D)
+double f(double h, int xi, int yj, int N, double **a, int D)
 {
   int x = (int)((double)xi/((double)N)*D);
   int y = (int)((double)yj/((double)N)*D);
@@ -41,21 +45,27 @@ bool sort_function(pair<int,int> pair1,pair<int,int> pair2)
 
 int main()
 {
-
-
   cout << "Hail Eris" << endl;
 
-  srand (time(NULL));
-  int VMax = 8000;
+  double Vini = 0.;
+  double Vmed = 4000.;
+  double sig  = 1000000.;
+  double Vend = 8000.;
   int D = 20;
-  int **a = new int*[D];
+  double **a = new double*[D];
   for(int i=0; i<D; i++)
-    a[i] = new int[D];
+    a[i] = new double[D];
+
+  //--- GSL random init ---
+  gsl_rng_env_setup();                          // Read variable environnement
+  const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
+  gsl_rng *gen = gsl_rng_alloc (type);          // Rand generator allocation
+  gsl_rng_set(gen,time(NULL));
 
   for(int i=0; i<D; i++)
     for(int j=0; j<D; j++)
     {
-      a[i][j] = double(rand())/RAND_MAX * VMax;
+      a[i][j] = rtnorm(gen,Vini,Vend,Vmed,sig).first;
     }
 
 
@@ -107,43 +117,11 @@ int main()
 
 
 
-  int Nmodos = 5;
+  int Nmodos = 10;
 
   vector<T> coefficients;
 
-  //double *boundary = new double[bleng];
-
   Eigen::VectorXd b(leng);
-
-  /*for(int i=0;i<Ntot;i++) //loop ao longo das colunas
-  {
-    for(int j=0;j<Ntot;j++) //loop dentro da linha
-    {
-      if(grid[i][j].second==1)
-      {
-        T entry(grid[i][j].first,grid[i][j].first,1);
-        coefficients.push_back(entry);
-        b[grid[i][j].first] = 0;
-      }
-      else if(grid[i][j].second==2)
-      {
-        T entry1(grid[i][j].first,grid[i][j].first,4+h*h*f(h,j,i,Ntot,a,D));
-        T entry2(grid[i][j].first,grid[i][j+1].first,-1);
-        T entry3(grid[i][j].first,grid[i][j-1].first,-1);
-        T entry4(grid[i][j].first,grid[i+1][j].first,-1);
-        T entry5(grid[i][j].first,grid[i-1][j].first,-1);
-  
-        coefficients.push_back(entry1);
-        coefficients.push_back(entry2);
-        coefficients.push_back(entry3);
-        coefficients.push_back(entry4);
-        coefficients.push_back(entry5);
-  
-        b[grid[i][j].first] = h*h;
-
-      }
-    }
-  }*/
 
   for(int i=0;i<Ntot;i++) //loop ao longo das colunas
   {
@@ -193,9 +171,6 @@ int main()
 //
 //  for(int i=0; i<leng; i++)
 //    cout << b(i) << endl;
-
-//  Eigen::SimplicialCholesky<SpMat> chol(A);
-//  Eigen::VectorXd x = chol.solve(b);
 
   Eigen::SparseLU<SpMat> solver(A);
 
@@ -255,11 +230,6 @@ int main()
 //    }
 //  }
 
-//  for(int i=0; i<minpoints.size(); i++)
-//  {
-//    cout << x(grid[minpoints[i].second][minpoints[i].first].first) << endl;
-//  }
-
 //Imprimir maximos/minimos para ficheiro
   ofstream outfilemin;
   outfilemin.open("min.dat");
@@ -301,213 +271,9 @@ int main()
   }
 
 
-//Algoritmo para descobrir o sistema de vales da solucao; o algoritmo percorre os percursos de maior declive desde a vizinhanca dos maximos ate a minimos locais
-  /*int vale[Ntot][Ntot];
-
-  for(int i=0; i<Ntot; i++)
-    for(int j=0; j<Ntot; j++)
-      vale[i][j] = 0;
-
-  for(int i=0; i<maxpoints.size(); i++)
-  {
-    bool notmin = true;
-    pair<int,int> pos = maxpoints[i];
-    if(grid[pos.second][pos.first].second>=1)
-    {
-      while(notmin)
-      {
-        int posx = pos.first;
-        int posy = pos.second;
-	if(grid[posy][posx].second!=2)
-	{
-          break;
-	}
-        pair<int,int> newpos = pos;
-
-        pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
-
-        for(int j=0; j<8; j++)
-        {
-          if(x(grid[newpos.second][newpos.first].first)>x(grid[viz[j].second][viz[j].first].first))
-            newpos = viz[j];
-        }
-        if(pos == newpos)
-        {
-          notmin = false;
-          break;
-        }
-
-        if(!notmin)
-          break;
-        pos = newpos;
-        vale[pos.first][pos.second] += 1;
-      }
-    }
-  }*/
-
-
-//Algoritmo para vale versao 2: fazer o mesmo mas para todos os pontos com valores nao nulos
-  int vale[Ntot][Ntot];
   double *W = new double[leng];
   for(int i=0; i<leng; i++)
     W[i]=1/x(i);
-
-
-  for(int i=0; i<Ntot; i++)
-    for(int j=0; j<Ntot; j++)
-      vale[i][j] = 0;
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int k=0; k<Ntot; k++)
-    {
-      if(grid[k][i].second==2)
-      {
-        bool notmin = true;
-        pair<int,int> pos = make_pair(i,k);
-        if(grid[pos.second][pos.first].second>=1)
-        {
-          while(notmin)
-          {
-            int posx = pos.first;
-            int posy = pos.second;
-          if(grid[posy][posx].second!=2)
-          {
-              break;
-          }
-            pair<int,int> newpos = pos;
-  
-            pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
-  
-            for(int j=0; j<8; j++)
-            {
-              if(W[grid[newpos.second][newpos.first].first]>W[grid[viz[j].second][viz[j].first].first])
-                newpos = viz[j];
-            }
-            if(pos == newpos)
-            {
-              notmin = false;
-              break;
-            }
-  
-            if(!notmin)
-              break;
-            pos = newpos;
-            vale[pos.first][pos.second] += 1;
-          }
-        }
-      }
-    }
-  }
-
-
-
-
-
-
-//Algoritmo de \"watershed\"
-  /*cout << "o algoritmo de watershed comeca aqui" << endl;
-
-//  double *W = new double(leng);  //Feito mais acima
-//  for(int i=0; i<leng; i++)
-//    W[i]=x(i);
-
-  map<int,pair<int,int>> idtocoord;
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[j][i].second==2)
-        idtocoord[grid[j][i].first] = make_pair(i,j);
-    }
-  }
-  vector<pair<int,int>> vals;
-  for(int i=0; i<leng; i++)
-  {
-    vals.push_back(make_pair(i,0));
-  }
-
-  for(int i=0; i<maxpoints.size(); i++)
-  {
-    vals[grid[maxpoints[i].second][maxpoints[i].first].first].second = i+1;
-  }
-  sort(vals.begin(),vals.end(),[&W](pair<int,int> pair1,pair<int,int> pair2) -> bool {return W[pair2.first] > W[pair1.first];});
-
-  bool minflag = false;
-
-  for(int i=0; i<vals.size(); i++)
-  {
-    int id = vals[i].first;
-    int coordx = idtocoord[id].first;
-    int coordy = idtocoord[id].second;
-    for(int j=0; j<maxpoints.size(); j++)
-    {
-      if(id == grid[maxpoints[j].second][maxpoints[j].first].first)
-      {
-        minflag = true;
-        break;
-      }
-    }
-    if(minflag)
-    {
-      cout << "BATATA MINIMA" << endl;
-      minflag=false;
-      continue;
-    }
-    pair<int,int> vizs[8] = {make_pair(coordx+1,coordy+1),make_pair(coordx,coordy+1),make_pair(coordx-1,coordy+1),make_pair(coordx+1,coordy),make_pair(coordx-1,coordy),make_pair(coordx+1,coordy-1),make_pair(coordx,coordy-1),make_pair(coordx-1,coordy-1)};
-
-    vector<int> labels;
-    bool lab_flag = false;
-    for(int j=0; j<8; j++)
-    {
-      if(grid[vizs[j].second][vizs[j].first].second==2)
-      {
-        int lab = vals[grid[vizs[j].second][vizs[j].first].first].second;
-        if(lab==0 || lab==1000){continue;}
-        for(int k=0; k<labels.size(); k++)
-        {
-          if(labels[k]==lab)
-          {
-            lab_flag=true;
-            break;
-          }
-        }
-        if(lab_flag)
-        {
-          lab_flag = false;
-          continue;
-        }
-        else
-          labels.push_back(lab);
-      }
-    }
-    if(labels.size()>=2)
-    {
-      vals[i].second=0;
-    }
-    else if(labels.empty())
-    {
-      vals[i].second=1000;
-    }
-    else
-    {
-      //cout << "BATATA  " << labels[0] << endl;
-      vals[i].second=labels[0];
-    }
-    //if(i<50)
-    //{
-    //  cout << coordx << "  " << coordy << "  " << W[id] << "  " << vals[i].second << endl;
-    //}
-
-  }
-  cout << "o algoritmo de watershed acaba aqui" << endl;*/
-
-
-
-
-
-
-
 
 
 //Algoritmo de watershed + anterior
@@ -582,7 +348,7 @@ int main()
   }
 
 
-  vector<tuple<int,int,double>> valley;
+  vector<tuple<int,int,double>> vale;
   for(int i=0; i<vals.size(); i++)
   {
     pair<int,int> pos = idtocoord[vals[i].first];
@@ -594,64 +360,8 @@ int main()
     for(int j=0; j<8; j++)
       labs.insert(vals[grid[viz[j].second][viz[j].first].first].second);
     if(labs.size()>=2)
-      valley.push_back(make_tuple(posx,posy,x(grid[posy][posx].first)));
+      vale.push_back(make_tuple(posx,posy,x(grid[posy][posx].first)));
   }
-
-
-
-//o outro algoritmo para o vale
-  vector<tuple<int,int,double>> vale3;
-  for(int i=2; i<Ntot-2; i++)
-  {
-    for(int j=2; j<Ntot-2; j++)
-    {
-      if(x(grid[j][i].first)<x(grid[j-1][i].first) && x(grid[j][i].first)<x(grid[j+1][i].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j][i-1].first) && x(grid[j][i].first)<x(grid[j][i+1].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j-1][i-1].first) && x(grid[j][i].first)<x(grid[j+1][i+1].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j-1][i+1].first) && x(grid[j][i].first)<x(grid[j+1][i-1].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-
-      if(x(grid[j][i].first)<x(grid[j-2][i].first) && x(grid[j][i].first)<x(grid[j+2][i].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j][i-2].first) && x(grid[j][i].first)<x(grid[j][i+2].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-
-      if(x(grid[j][i].first)<x(grid[j-2][i-1].first) && x(grid[j][i].first)<x(grid[j+2][i+1].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j-1][i-2].first) && x(grid[j][i].first)<x(grid[j+1][i+2].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j+2][i-1].first) && x(grid[j][i].first)<x(grid[j-2][i+1].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-      if(x(grid[j][i].first)<x(grid[j-1][i+2].first) && x(grid[j][i].first)<x(grid[j+1][i-2].first))
-        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-
-
-    }
-  }
-
-//Ainda outro algoritmo par ao vale -> atraves de derivadas
-  vector<tuple<int,int,double>> vale4;
-  for(int i=1; i<Ntot-1; i++)
-  {
-    for(int j=1; j<Ntot-1; j++)
-    {
-      if((abs((x(grid[j+1][i].first)-x(grid[j-1][i].first))/x(grid[j][i].first))<0.05 || abs((x(grid[j][i+1].first)-x(grid[j][i-1].first))/x(grid[j][i].first))<0.05) && !((x(grid[j+1][i].first)<x(grid[j][i].first) && x(grid[j-1][i].first)<x(grid[j][i].first)) || (x(grid[j][i-1].first)<x(grid[j][i].first) && x(grid[j][i-1].first)<x(grid[j][i].first))))
-        vale4.push_back(make_tuple(i,j,x(grid[j][i].first)));
-    }
-  }
-
-
-//  for(int j=0; j<Ntot; j++)
-//  {
-//    for(int i=1; i<Ntot-1; i++)
-//    {
-//      if(x(grid[j][i].first)<x(grid[j][i-1].first) && x(grid[j][i].first)<x(grid[j][i+1].first))
-//        vale3.push_back(make_tuple(i,j,x(grid[j][i].first)));
-//    }
-//  }
 
 
 
@@ -719,72 +429,22 @@ int main()
   outfilef.close();
   cout << "escrevi o potencial para um ficheiro" << endl;
 
-//Escrever vale para ficheiro
+//Escrever vale para ficheiro - ultima versao
   ofstream outfilevale;
   outfilevale.open("vale.dat");
 
-  for(int i=0; i<Ntot; i++)
-    for(int j=0; j<Ntot; j++)
-    {
-      if(vale[i][j] > 1)
-        outfilevale << double(i)*h << "   " << double(j)*h << "   " << vale[i][j] << endl;
-    }
+  for(int i=0; i<vale.size(); i++)
+  {
+    outfilevale << get<0>(vale[i])*h << "   " << get<1>(vale[i])*h << "   " << get<2>(vale[i]) << endl;
+  }
   outfilevale.close();
-
-
-
-//Escrever vale para ficheiro
-  ofstream outfilevale2;
-  outfilevale2.open("vale2.dat");
-
-  for(int i=0; i<Ntot; i++)
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[j][i].second == 2)
-        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << vals[grid[j][i].first].second << endl;
-      else
-        outfilevale2 << double(i)*h << "   " << double(j)*h << "   " << 0 << endl;
-    }
-  outfilevale2.close();
-
-
-//Escrever vale para ficheiro
-  ofstream outfilevale3;
-  outfilevale3.open("vale3.dat");
-
-  for(int i=0; i<vale3.size(); i++)
-  {
-    outfilevale3 << get<0>(vale3[i])*h << "   " << get<1>(vale3[i])*h << "   " << get<2>(vale3[i]) << endl;
-  }
-  outfilevale3.close();
-
-
-//Escrever vale para ficheiro
-  ofstream outfilevale4;
-  outfilevale4.open("vale4.dat");
-
-  for(int i=0; i<vale4.size(); i++)
-  {
-    outfilevale4 << get<0>(vale4[i])*h << "   " << get<1>(vale4[i])*h << "   " << get<2>(vale4[i]) << endl;
-  }
-  outfilevale4.close();
-
-//Escrever vale para ficheiro - ultima versao
-  ofstream outfilevale5;
-  outfilevale5.open("valley.dat");
-
-  for(int i=0; i<valley.size(); i++)
-  {
-    outfilevale5 << get<0>(valley[i])*h << "   " << get<1>(valley[i])*h << "   " << get<2>(valley[i]) << endl;
-  }
-  outfilevale5.close();
 
 
 //Calculo de valores e vectores proprios
 
   SparseGenMatProd<double> op(A);
   cout << "BATATA1" << endl;
-  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+30);
+  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+50);
   cout << "BATATA2" << endl;
   eigs.init();
   cout << "BATATA3" << endl;
@@ -823,21 +483,55 @@ int main()
 
   //cout << evectors(0,0).real() << endl;
 
+  double max0 = 0.;
+  double max1 = 0.;
+  double max2 = 0.;
+  double max3 = 0.;
+  double max4 = 0.;
+  double max5 = 0.;
+  double max6 = 0.;
+  double max7 = 0.;
+  double max8 = 0.;
+  double max9 = 0.;
+
+  for(int i=0; i<leng; i++)
+  {
+    if(abs(evectors(i,Nmodos-10).real()) > max0)
+      max0 = abs(evectors(i,Nmodos-10).real());
+    if(abs(evectors(i,Nmodos-9).real()) > max1)
+      max1 = abs(evectors(i,Nmodos-9).real());
+    if(abs(evectors(i,Nmodos-8).real()) > max2)
+      max2 = abs(evectors(i,Nmodos-8).real());
+    if(abs(evectors(i,Nmodos-7).real()) > max3)
+      max3 = abs(evectors(i,Nmodos-7).real());
+    if(abs(evectors(i,Nmodos-6).real()) > max4)
+      max4 = abs(evectors(i,Nmodos-6).real());
+    if(abs(evectors(i,Nmodos-5).real()) > max5)
+      max0 = abs(evectors(i,Nmodos-5).real());
+    if(abs(evectors(i,Nmodos-4).real()) > max6)
+      max1 = abs(evectors(i,Nmodos-4).real());
+    if(abs(evectors(i,Nmodos-3).real()) > max7)
+      max2 = abs(evectors(i,Nmodos-3).real());
+    if(abs(evectors(i,Nmodos-2).real()) > max8)
+      max3 = abs(evectors(i,Nmodos-2).real());
+    if(abs(evectors(i,Nmodos-1).real()) > max9)
+      max4 = abs(evectors(i,Nmodos-1).real());
+
+  }
+
+
   ofstream outfile_evec0;
   outfile_evec0.open("eigenvectors0.dat");
-
-
   for(int i=0; i<Ntot; i++)
   {
     for(int j=0; j<Ntot; j++)
     {
       if(grid[i][j].second>=1)
-        outfile_evec0 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-1).real() << endl;
+        outfile_evec0 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-10).real()/max0 << endl;
     }
   }
 
   outfile_evec0.close();
-
 
   ofstream outfile_evec1;
   outfile_evec1.open("eigenvectors1.dat");
@@ -847,7 +541,7 @@ int main()
     for(int j=0; j<Ntot; j++)
     {
       if(grid[i][j].second>=1)
-        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real() << endl;
+        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-9).real()/max1 << endl;
     }
   }
 
@@ -863,14 +557,13 @@ int main()
     for(int j=0; j<Ntot; j++)
     {
       if(grid[i][j].second>=1)
-        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real() << endl;
+        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-8).real()/max2 << endl;
     }
   }
 
   outfile_evec2.close();
 
   cout << "escrevi o terceiro vector proprio" << endl;
-
 
   ofstream outfile_evec3;
   outfile_evec3.open("eigenvectors3.dat");
@@ -880,7 +573,7 @@ int main()
     for(int j=0; j<Ntot; j++)
     {
       if(grid[i][j].second>=1)
-        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real() << endl;
+        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-7).real()/max3 << endl;
     }
   }
 
@@ -896,7 +589,7 @@ int main()
     for(int j=0; j<Ntot; j++)
     {
       if(grid[i][j].second>=1)
-        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real() << endl;
+        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-6).real()/max4 << endl;
     }
   }
 
@@ -905,6 +598,73 @@ int main()
   cout << "escrevi o quinto vector proprio" << endl;
 
 
+  ofstream outfile_evec5;
+  outfile_evec5.open("eigenvectors5.dat");
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec5 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real()/max5 << endl;
+    }
+  }
+
+  outfile_evec5.close();
+
+
+  ofstream outfile_evec6;
+  outfile_evec6.open("eigenvectors6.dat");
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec6 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real()/max6 << endl;
+    }
+  }
+
+  outfile_evec6.close();
+
+
+  ofstream outfile_evec7;
+  outfile_evec7.open("eigenvectors7.dat");
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec7 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real()/max7 << endl;
+    }
+  }
+
+  outfile_evec7.close();
+
+  ofstream outfile_evec8;
+  outfile_evec8.open("eigenvectors8.dat");
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec8 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real()/max8 << endl;
+    }
+  }
+
+  outfile_evec8.close();
+
+
+  ofstream outfile_evec9;
+  outfile_evec9.open("eigenvectors9.dat");
+  for(int i=0; i<Ntot; i++)
+  {
+    for(int j=0; j<Ntot; j++)
+    {
+      if(grid[i][j].second>=1)
+        outfile_evec9 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-1).real()/max9 << endl;
+    }
+  }
+
+  outfile_evec9.close();
 
   for(int i=0; i<D; i++)
     delete[] a[i];

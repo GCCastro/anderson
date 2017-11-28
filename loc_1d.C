@@ -16,6 +16,11 @@
 
 #include <vector>
 #include <tuple>
+#include <random>
+
+#include <gsl/gsl_rng.h>  //random generator
+#include "rtnorm.hpp"     //truncated normal distribution
+
 typedef Eigen::SparseMatrix<double> SpMat; // declares a column-major sparse matrix type of double
 typedef Eigen::Triplet<double> T;
 
@@ -34,14 +39,23 @@ int main()
 
   cout << "Hail Eris" << endl;
 
-  srand (time(NULL));
-  double VMax = 8000.;
+  double Vmed = 4000.;
+  double sig  = 1000.;
+  double Vini = 0.;
+  double Vend = 8000.;
   int D = 20;
   double *a = new double[D];
 
-  for(int i=0; i<D; i++)
-    a[i] = double(rand())/RAND_MAX * VMax;
+  //--- GSL random init ---
+  gsl_rng_env_setup();                          // Read variable environnement
+  const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
+  gsl_rng *gen = gsl_rng_alloc (type);          // Rand generator allocation
+  gsl_rng_set(gen,time(NULL));
 
+
+  for(int i=0; i<D; i++)
+    a[i] = rtnorm(gen,Vini,Vend,Vmed,sig).first;
+   
 
   //isto devia vir directamente do ficheiro
   double L = 1.;
@@ -56,21 +70,21 @@ int main()
 
   for(int i=1; i<N-1; i++)
   {
-    T entry1(i,i,2+h*h*f(h,i,N,a,D));
+    T entry1(i,i,2./h/h+f(h,i,N,a,D));
     coefficients.push_back(entry1);
-    T entry2(i+1,i,-1);
+    T entry2(i+1,i,-1./h/h);
     coefficients.push_back(entry2);
-    T entry3(i-1,i,-1);
+    T entry3(i-1,i,-1./h/h);
     coefficients.push_back(entry3);
-    b[i] = h*h;
+    b[i] = 1.;
   }
-  T entry00(0,0,2+h*h*f(h,0,N,a,D));
+  T entry00(0,0,2./h/h+f(h,0,N,a,D));
   coefficients.push_back(entry00);
-  T entry01(1,0,-1);
+  T entry01(1,0,-1./h/h);
   coefficients.push_back(entry01);
-  T entryN0(N-1,N-1,2+h*h*f(h,N-1,N,a,D));
+  T entryN0(N-1,N-1,2./h/h+f(h,N-1,N,a,D));
   coefficients.push_back(entryN0);
-  T entryN1(N-2,N-1,-1);
+  T entryN1(N-2,N-1,-1./h/h);
   coefficients.push_back(entryN1);
   b[0] = 0;
   b[N-1] = 0;
@@ -115,34 +129,45 @@ int main()
   Eigen::MatrixXcd evectors = eigs.eigenvectors();
   cout << "sobrevivi a calcular os vectores proprios" << endl;
 
-  double integral=1.;
-//  integral = 0.;
-//  for(int i=1; i<N; i++)
-//  {
-//    integral+=(evectors(i,1).real()+evectors(i-1,1).real())*h/2;
-//  }
-//  cout << "integral=" << integral << endl;
+  double max0 = 0.;
+  double max1 = 0.;
+  double max2 = 0.;
+  double max3 = 0.;
+  double max4 = 0.;
 
+  for(int i=0; i<N; i++)
+  {
+    if(abs(evectors(i,Nmodos-1).real()) > max0)
+      max0 = abs(evectors(i,Nmodos-1).real());
+    if(abs(evectors(i,Nmodos-2).real()) > max1)
+      max1 = abs(evectors(i,Nmodos-2).real());
+    if(abs(evectors(i,Nmodos-3).real()) > max2)
+      max2 = abs(evectors(i,Nmodos-3).real());
+    if(abs(evectors(i,Nmodos-4).real()) > max3)
+      max3 = abs(evectors(i,Nmodos-4).real());
+    if(abs(evectors(i,Nmodos-5).real()) > max4)
+      max4 = abs(evectors(i,Nmodos-5).real());
+  }
 
   ofstream outfile_evec0;
   outfile_evec0.open("eigenvectors0_1d.dat");
   for(int i=0; i<N; i++)
   {
-    outfile_evec0 << h*i << "   " << evectors(i,Nmodos-1).real()/integral << endl;
+    outfile_evec0 << h*i << "   " << evectors(i,Nmodos-1).real()/max0 << endl;
   }
   outfile_evec0.close();
   ofstream outfile_evec1;
   outfile_evec1.open("eigenvectors1_1d.dat");
   for(int i=0; i<N; i++)
   {
-    outfile_evec1 << h*i << "   " << evectors(i,Nmodos-2).real() << endl;
+    outfile_evec1 << h*i << "   " << evectors(i,Nmodos-2).real()/max1 << endl;
   }
   outfile_evec1.close();
   ofstream outfile_evec2;
   outfile_evec2.open("eigenvectors2_1d.dat");
   for(int i=0; i<N; i++)
   {
-    outfile_evec2 << h*i << "   " << evectors(i,Nmodos-3).real() << endl;
+    outfile_evec2 << h*i << "   " << evectors(i,Nmodos-3).real()/max2 << endl;
   }
   outfile_evec2.close();
 
@@ -150,7 +175,7 @@ int main()
   outfile_evec3.open("eigenvectors3_1d.dat");
   for(int i=0; i<N; i++)
   {
-    outfile_evec3 << h*i << "   " << evectors(i,Nmodos-4).real() << endl;
+    outfile_evec3 << h*i << "   " << evectors(i,Nmodos-4).real()/max3 << endl;
   }
   outfile_evec3.close();
 
@@ -158,7 +183,7 @@ int main()
   outfile_evec4.open("eigenvectors4_1d.dat");
   for(int i=0; i<N; i++)
   {
-    outfile_evec4 << h*i << "   " << evectors(i,Nmodos-5).real() << endl;
+    outfile_evec4 << h*i << "   " << evectors(i,Nmodos-5).real()/max4 << endl;
   }
   outfile_evec4.close();
 
@@ -183,4 +208,9 @@ int main()
   outfilepot.close();
   cout << "escrevi o potencial para um ficheiro" << endl;
 
+
+
+  gsl_rng_free(gen);                            // GSL rand generator deallocation
+
+  return 0;
 }
