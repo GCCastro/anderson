@@ -39,8 +39,11 @@ int main()
 
   cout << "Hail Eris" << endl;
 
+  cout << "sigma da distribuicao?" << endl;
+  double sig;
+  cin >> sig;
+
   double Vmed = 4000.;
-  double sig  = 1000.;
   double Vini = 0.;
   double Vend = 8000.;
   int D = 20;

@@ -9,7 +9,7 @@ using namespace std;
 int main()
 {
   double L = 1.7;
-  double h = 0.0099;
+  double h = 0.009;
   int N = int(L/h);
   int leng = N*N;
   int bleng = 4*N-4;

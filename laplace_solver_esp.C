@@ -75,7 +75,7 @@ int main()
 
   //isto devia vir directamente do ficheiro
   double L = 1.7;
-  double h = 0.0099;
+  double h = 0.009;
   int Ntot = int(L/h);
   cout << Ntot << endl;
 
@@ -131,7 +131,7 @@ int main()
 
   cout << "BATATA" << endl;
 
-  int Nmodos = 10;
+  int Nmodos = 3;
 
   vector<T> coefficients;
 
@@ -528,7 +528,7 @@ int main()
 
   SparseGenMatProd<double> op(A);
   cout << "BATATA1" << endl;
-  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+1000);
+  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+100);
   cout << "BATATA2" << endl;
   eigs.init();
   cout << "BATATA3" << endl;
@@ -568,13 +568,13 @@ int main()
   double max0 = 0.;
   double max1 = 0.;
   double max2 = 0.;
-  double max3 = 0.;
-  double max4 = 0.;
-  double max5 = 0.;
-  double max6 = 0.;
-  double max7 = 0.;
-  double max8 = 0.;
-  double max9 = 0.;
+//  double max3 = 0.;
+//  double max4 = 0.;
+//  double max5 = 0.;
+//  double max6 = 0.;
+//  double max7 = 0.;
+//  double max8 = 0.;
+//  double max9 = 0.;
 
   for(int i=0; i<leng; i++)
   {
@@ -584,20 +584,20 @@ int main()
       max1 = abs(evectors(i,Nmodos-2).real());
     if(abs(evectors(i,Nmodos-3).real()) > max2)
       max2 = abs(evectors(i,Nmodos-3).real());
-    if(abs(evectors(i,Nmodos-4).real()) > max3)
-      max3 = abs(evectors(i,Nmodos-4).real());
-    if(abs(evectors(i,Nmodos-5).real()) > max4)
-      max4 = abs(evectors(i,Nmodos-5).real());
-    if(abs(evectors(i,Nmodos-6).real()) > max5)
-      max5 = abs(evectors(i,Nmodos-6).real());
-    if(abs(evectors(i,Nmodos-7).real()) > max6)
-      max6 = abs(evectors(i,Nmodos-7).real());
-    if(abs(evectors(i,Nmodos-8).real()) > max7)
-      max7 = abs(evectors(i,Nmodos-8).real());
-    if(abs(evectors(i,Nmodos-9).real()) > max8)
-      max8 = abs(evectors(i,Nmodos-9).real());
-    if(abs(evectors(i,Nmodos-10).real()) > max9)
-      max9 = abs(evectors(i,Nmodos-10).real());
+//    if(abs(evectors(i,Nmodos-4).real()) > max3)
+//      max3 = abs(evectors(i,Nmodos-4).real());
+//    if(abs(evectors(i,Nmodos-5).real()) > max4)
+//      max4 = abs(evectors(i,Nmodos-5).real());
+//    if(abs(evectors(i,Nmodos-6).real()) > max5)
+//      max5 = abs(evectors(i,Nmodos-6).real());
+//    if(abs(evectors(i,Nmodos-7).real()) > max6)
+//      max6 = abs(evectors(i,Nmodos-7).real());
+//    if(abs(evectors(i,Nmodos-8).real()) > max7)
+//      max7 = abs(evectors(i,Nmodos-8).real());
+//    if(abs(evectors(i,Nmodos-9).real()) > max8)
+//      max8 = abs(evectors(i,Nmodos-9).real());
+//    if(abs(evectors(i,Nmodos-10).real()) > max9)
+//      max9 = abs(evectors(i,Nmodos-10).real());
 
   }
 
@@ -647,7 +647,7 @@ int main()
 
   cout << "escrevi o terceiro vector proprio" << endl;
 
-  ofstream outfile_evec3;
+/*  ofstream outfile_evec3;
   outfile_evec3.open("eigenvectors3.dat");
 
   for(int i=0; i<Ntot; i++)
@@ -746,7 +746,7 @@ int main()
     }
   }
 
-  outfile_evec9.close();
+  outfile_evec9.close();*/
 
   for(int i=0; i<D; i++)
     delete[] a[i];

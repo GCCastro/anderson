@@ -37,7 +37,7 @@ laplace_solver_esp.o: laplace_solver_esp.C
 rtnorm.o: $(SRC1)
 	$(CC) $(CFLAGS) $^
 
-gen: koch estranho
+gen: koch estranho quad
 
 koch: koch_gen.o
 	$(CC) -o koch_gen $^ 
@@ -45,12 +45,17 @@ koch: koch_gen.o
 estranho: estranho_gen.o
 	$(CC) -o estranho_gen $^ 
 
+quad: square_gen.o
+	$(CC) -o square_gen $^ 
+
 koch_gen.o: koch_gen.C
 	$(CC) $(CFLAGS) $^ $(SPECTRA)
 
 estranho_gen.o: estranho_gen.C
 	$(CC) $(CFLAGS) $^ $(SPECTRA)
 
+square_gen.o: square_gen.C
+	$(CC) $(CFLAGS) $^ $(SPECTRA)
 
 
 

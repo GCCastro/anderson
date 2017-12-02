@@ -75,7 +75,7 @@ int main()
 
   //isto devia vir directamente do ficheiro
   double L = 1.7;
-  double h = 0.0049;
+  double h = 0.009;
   int Ntot = int(L/h);
   cout << Ntot << endl;
 
@@ -138,7 +138,7 @@ int main()
 
 
 
-  int Nmodos = 10;
+  int Nmodos = 3;
 
   vector<T> coefficients;
 
@@ -398,7 +398,7 @@ int main()
     {
       if(grid[j][i].second==2)
         outfile << h*i << "   " << h*j << "   " << x[grid[j][i].first] << endl;
-      else if(grid[j][i].second<=1)
+      else if(grid[j][i].second==1)
         outfile << h*i << "   " << h*j << "   " << 0 << endl;
       contador++;
     }
@@ -521,33 +521,34 @@ int main()
       max1 = abs(evectors(i,Nmodos-2).real());
     if(abs(evectors(i,Nmodos-3).real()) > max2)
       max2 = abs(evectors(i,Nmodos-3).real());
-    if(abs(evectors(i,Nmodos-4).real()) > max3)
-      max3 = abs(evectors(i,Nmodos-4).real());
-    if(abs(evectors(i,Nmodos-5).real()) > max4)
-      max4 = abs(evectors(i,Nmodos-5).real());
-    if(abs(evectors(i,Nmodos-6).real()) > max5)
-      max5 = abs(evectors(i,Nmodos-6).real());
-    if(abs(evectors(i,Nmodos-7).real()) > max6)
-      max6 = abs(evectors(i,Nmodos-7).real());
-    if(abs(evectors(i,Nmodos-8).real()) > max7)
-      max7 = abs(evectors(i,Nmodos-8).real());
-    if(abs(evectors(i,Nmodos-9).real()) > max8)
-      max8 = abs(evectors(i,Nmodos-9).real());
-    if(abs(evectors(i,Nmodos-10).real()) > max9)
-      max9 = abs(evectors(i,Nmodos-10).real());
+    //if(abs(evectors(i,Nmodos-4).real()) > max3)
+    //  max3 = abs(evectors(i,Nmodos-4).real());
+    //if(abs(evectors(i,Nmodos-5).real()) > max4)
+    //  max4 = abs(evectors(i,Nmodos-5).real());
+    //if(abs(evectors(i,Nmodos-6).real()) > max5)
+    //  max5 = abs(evectors(i,Nmodos-6).real());
+    //if(abs(evectors(i,Nmodos-7).real()) > max6)
+    //  max6 = abs(evectors(i,Nmodos-7).real());
+    //if(abs(evectors(i,Nmodos-8).real()) > max7)
+    //  max7 = abs(evectors(i,Nmodos-8).real());
+    //if(abs(evectors(i,Nmodos-9).real()) > max8)
+    //  max8 = abs(evectors(i,Nmodos-9).real());
+    //if(abs(evectors(i,Nmodos-10).real()) > max9)
+    //  max9 = abs(evectors(i,Nmodos-10).real());
 
   }
 
 
   ofstream outfile_evec0;
   outfile_evec0.open("eigenvectors0.dat");
-  for(int i=0; i<Ntot; i++)
+  for(int j=0; j<Ntot; j++)
   {
-    for(int j=0; j<Ntot; j++)
+    for(int i=0; i<Ntot; i++)
     {
       if(grid[i][j].second>=1)
         outfile_evec0 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-1).real()/max0 << endl;
     }
+    outfile_evec0 << endl;
   }
 
   outfile_evec0.close();
@@ -555,13 +556,14 @@ int main()
   ofstream outfile_evec1;
   outfile_evec1.open("eigenvectors1.dat");
 
-  for(int i=0; i<Ntot; i++)
+  for(int j=0; j<Ntot; j++)
   {
-    for(int j=0; j<Ntot; j++)
+    for(int i=0; i<Ntot; i++)
     {
       if(grid[i][j].second>=1)
         outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real()/max1 << endl;
     }
+    outfile_evec1 << endl;
   }
 
   outfile_evec1.close();
@@ -571,20 +573,21 @@ int main()
   ofstream outfile_evec2;
   outfile_evec2.open("eigenvectors2.dat");
 
-  for(int i=0; i<Ntot; i++)
+  for(int j=0; j<Ntot; j++)
   {
-    for(int j=0; j<Ntot; j++)
+    for(int i=0; i<Ntot; i++)
     {
       if(grid[i][j].second>=1)
         outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real()/max2 << endl;
     }
+    outfile_evec2 << endl;
   }
 
   outfile_evec2.close();
 
   cout << "escrevi o terceiro vector proprio" << endl;
 
-  ofstream outfile_evec3;
+/*  ofstream outfile_evec3;
   outfile_evec3.open("eigenvectors3.dat");
 
   for(int i=0; i<Ntot; i++)
@@ -683,7 +686,7 @@ int main()
     }
   }
 
-  outfile_evec9.close();
+  outfile_evec9.close();*/
 
   for(int i=0; i<D; i++)
     delete[] a[i];
