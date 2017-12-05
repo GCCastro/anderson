@@ -12,7 +12,7 @@ int main()
 
   double L = 1.7;
   double l = 1.;
-  int iters = 3;
+  int iters = 2;
   double i_square = L/2-l/2;
   double f_square = L/2+l/2;
 

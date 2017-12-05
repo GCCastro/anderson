@@ -132,7 +132,34 @@ int main()
   Eigen::MatrixXcd evectors = eigs.eigenvectors();
   cout << "sobrevivi a calcular os vectores proprios" << endl;
 
-  double max0 = 0.;
+
+
+  for(int i=0; i<Nmodos; i++)
+  {
+    double max=0;
+    for(int j=0; j<N; j++)
+    {
+      cout << i << "  " << j << endl;
+      if(abs(evectors(j,Nmodos-(i+1)).real()) > max)
+        max = abs(evectors(j,Nmodos-(i+1)).real());
+    }
+    cout << "BATATA" << endl;
+    ofstream outfile_evec;
+    string file_vec = string("eigenvectors") + to_string(i);
+    file_vec += string("_1d.dat");
+    outfile_evec.open(file_vec.c_str());
+    for(int jj=0; jj<N; jj++)
+    {
+      outfile_evec << h*jj << "   " << evectors(jj,Nmodos-(i+1)).real()/max << endl;
+    }
+    outfile_evec.close();
+  }
+
+
+
+
+
+/*  double max0 = 0.;
   double max1 = 0.;
   double max2 = 0.;
   double max3 = 0.;
@@ -188,7 +215,7 @@ int main()
   {
     outfile_evec4 << h*i << "   " << evectors(i,Nmodos-5).real()/max4 << endl;
   }
-  outfile_evec4.close();
+  outfile_evec4.close();*/
 
 
 //Escrever solucao para ficheiro

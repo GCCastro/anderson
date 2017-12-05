@@ -1,0 +1,92 @@
+\documentclass[a4paper,prd,twocolumn,nofootinbib,superscriptaddress,floatfix]{revtex4}
+%\documentclass[prd,twocolumn,nofootinbib,showpacs]{revtex4-1}
+
+%\usepackage{amsmath,amssymb}
+\usepackage{cancel}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage[utf8]{inputenc}
+
+
+\begin{document}
+
+%\linenumbers
+
+\title{Falta aqui um titulo}
+
+\author{Gonçalo Castro (n.78497)}
+
+\affiliation{Departamento de F\'{\i}sica, Instituto Superior T\'ecnico, Universidade de Lisboa, Lisboa, Portugal}
+%\begin{document}
+
+\begin{abstract}
+
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+Localization phenomena, the confinement of vibrations or waves to a subregion of a domain, can be found in several different areas of physics. The mainly studied topic, however, is that of Anderson localization, in the context of condensed matter physics. This effect, which was first modelled by Anderson in 1958, occurs for the diffusion of electrons in a medium with some inherent randomness, such as, for instance, impurities. Due to this randomness, the electron wavefunction is found not to spread over the whole medium, as should happen in a diffusion process, but to remain localized in a relatively small area. 
+
+Recently, advancements have been made in studying how localization emerges in general, through the development of the Localization Landscape (LL) theory. Considering some differential operator $L$ in a region $\Omega$, it was proven that its eigenfunctions, that is, solutions of the equation:
+
+\begin{equation}
+L\Psi= \lambda\Psi \text{ , } \Psi = 0 \text{ in }\partial\Omega
+\label{eq:eigen}
+\end{equation}
+
+are controlled by the following relation:
+
+\begin{equation}
+\frac{|\Psi|}{sup_{\Omega}|\Psi|} \leq \lambda u
+\label{eq:rel}
+\end{equation}
+
+where $u$ is the landscape function, defined by:
+
+\begin{equation}
+Lu=1 \text{ , } \Psi = 0 \text{ in }\partial\Omega
+\label{eq:land}
+\end{equation}
+
+The proof of this result is found in the appendix of \ref{art:2012}.
+
+This was applied to the phenomenom of Anderson localization by taking $L=H$, such that we have the Schrödinger equation \ref{eq:eigen} with Dirichlet conditions in the boundary of $\Omega$ and a random potential, in order to model the randomness of the medium. This potential gives rise to a network of peaks and valleys in the landscape function which, in its turn, forces the eigenfunctions to respect such network, following relation \eqref{eq:land}. Such system, called the Effective Valley Network, was, therefore, found to define in which subregions of the whole domain can the eigenfunctions be, depending on the corresponding energy.
+
+Such a result was crucial, not only for a more complete understanding of the general concept of localization but also in practical terms, as the computation of the landscape function is much faster than that of the eigenfunctions and, in some applications, the relevant information can be obtained from it. However, the LL theory still does not tell us how localization appears from non-localization situations, that is, with a low level of disorder, and, correspondingly, how the Effective Valley Network comes to control the eigenfunctions.
+
+In this article we compare the results computed with our methods with the previously obtained results that have been mentioned and study what is the relation between the localization function, the Effective Valley Network and the eigenfunctions for a potential that is not completely random, modelling, in the practical situation of Anderson Localization, a medium with low level of disorder.
+
+%FALTA FALAR DE MOTIVAÇÕES
+
+
+\section{Methods}
+
+%DIGO ALGUMA COISA SOBRE FIGURAS ESTRANHAS?
+
+In our work we first analysed the relation between the landscape function and the eigenfunctions for the case of a uniformly distributed potential and then 
+
+\subsection{Random potential}
+
+The random potential was built by dividing the domain into $20^d$ subregions, $d$ being its dimension, and assigning a random value to each one. This random value was generated according to a truncated normal distribution, using and implementation of Chopin's algorithm. The fixed parameters for the distribution were the minimum value $0$, maximum value $V_{max}=8000$, mean $\mu=4000$. For the uniform distribution any $\sigma\gg\mu$ can be used.
+
+In this work we first computed the landscape function for a given random potential, as was previously done . This potential was built by dividing the domain $20^d$ subregions, $d$ being its dimension, and assigning a random, uniformly distributed, value between 0 and some positive $V_{max}$. We only analysed this for $d=1,2$, as these cases are the ones that can be easily visualized. We chose $V_{max}=8000$ and the uniform distribution was in fact a truncated normal distribution with $\sigma\gg$
+
+\acknowledgements
+
+\begin{thebibliography}{99}
+
+\bibitem{Joaquim:2006mn}
+  F.~R.~Joaquim and A.~Rossi,
+  %``Phenomenology of the triplet seesaw mechanism with Gauge and Yukawa mediation of SUSY breaking,''
+  Nucl.\ Phys.\ B {\bf 765} (2007) 71
+  [hep-ph/0607298].
+  %%CITATION = HEP-PH/0607298;%%
+  %51 citations counted in INSPIRE as of 26 Sep 2013
+
+\end{thebibliography}
+
+\end{document}
+

@@ -3,8 +3,8 @@
 #include <eigen3/Eigen/Sparse>
 #include <eigen3/Eigen/Core>
 
-#include <GenEigsSolver.h>
-#include <MatOp/SparseGenMatProd.h> 
+#include <SymEigsSolver.h>
+#include <MatOp/SparseSymMatProd.h> 
 
 
 #include <iostream>
@@ -51,6 +51,12 @@ int main()
   double sig;
   cin >> sig;
 
+  double L = 1.7;
+  double h = 0.009;
+  int Ntot = int(L/h);
+  cout << Ntot << endl;
+
+
 
   double Vini = 0.;
   double Vmed = 4000.;
@@ -66,18 +72,33 @@ int main()
   gsl_rng *gen = gsl_rng_alloc (type);          // Rand generator allocation
   gsl_rng_set(gen,time(NULL));
 
-  for(int i=0; i<D; i++)
-    for(int j=0; j<D; j++)
+  cout << "gero potencial?" << endl;
+  string pp;
+  cin >> pp;
+  if(pp=="s")
+  {
+    for(int i=0; i<D; i++)
+      for(int j=0; j<D; j++)
+      {
+        a[i][j] = rtnorm(gen,Vini,Vend,Vmed,sig).first;
+      }
+  }
+  else
+  {
+    ifstream infilep;
+    infilep.open("potd.dat");
+    int xi,yj;
+    double va;
+    while(infilep >> xi >> yj >> va)
     {
-      a[i][j] = rtnorm(gen,Vini,Vend,Vmed,sig).first;
+      a[xi][yj] = va;
+
     }
+    infilep.close();
+  }
 
 
   //isto devia vir directamente do ficheiro
-  double L = 1.7;
-  double h = 0.009;
-  int Ntot = int(L/h);
-  cout << Ntot << endl;
 
 //  cout << "condicoes fronteira?" << endl
 //  string bound;
@@ -138,7 +159,7 @@ int main()
 
 
 
-  int Nmodos = 3;
+  int Nmodos = 100;
 
   vector<T> coefficients;
 
@@ -375,10 +396,12 @@ int main()
     pair<int,int> pos = idtocoord[vals[i].first];
     int posx = pos.first;
     int posy = pos.second;
-    pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+    //pair<int,int> viz[8] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy+1),make_pair(posx-1,posy-1),make_pair(posx+1,posy+1),make_pair(posx+1,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+    pair<int,int> viz[4] = {make_pair(posx,posy+1),make_pair(posx,posy-1),make_pair(posx-1,posy),make_pair(posx+1,posy)};
+
     set<int> labs;
     labs.insert(vals[i].second);
-    for(int j=0; j<8; j++)
+    for(int j=0; j<4; j++)
       labs.insert(vals[grid[viz[j].second][viz[j].first].first].second);
     if(labs.size()>=2)
       vale.push_back(make_tuple(posx,posy,x(grid[posy][posx].first)));
@@ -450,6 +473,20 @@ int main()
   outfilef.close();
   cout << "escrevi o potencial para um ficheiro" << endl;
 
+
+//potencial para usar em programa
+  ofstream outfilep;
+  outfilep.open("potd.dat");
+
+  for(int i=0; i<D; i++)
+    for(int j=0; j<D; j++)
+    {
+      outfilep << i << "   " << j << "   " << a[i][j] << endl;
+    }
+  outfilep.close();
+  cout << "escrevi o potencial para um ficheiro uma segunda vez" << endl;
+
+
 //Escrever vale para ficheiro - ultima versao
   ofstream outfilevale;
   outfilevale.open("vale.dat");
@@ -463,9 +500,9 @@ int main()
 
 //Calculo de valores e vectores proprios
 
-  SparseGenMatProd<double> op(A);
+  SparseSymMatProd<double> op(A);
   cout << "BATATA1" << endl;
-  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+1000);
+  SymEigsSolver< double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+7000);
   cout << "BATATA2" << endl;
   eigs.init();
   cout << "BATATA3" << endl;
@@ -502,191 +539,216 @@ int main()
 
   //cout << evectors(0,0).real() << endl;
 
-  double max0 = 0.;
-  double max1 = 0.;
-  double max2 = 0.;
-  double max3 = 0.;
-  double max4 = 0.;
-  double max5 = 0.;
-  double max6 = 0.;
-  double max7 = 0.;
-  double max8 = 0.;
-  double max9 = 0.;
+//  double max0 = 0.;
+//  double max1 = 0.;
+//  double max2 = 0.;
+//  double max3 = 0.;
+//  double max4 = 0.;
+//  double max5 = 0.;
+//  double max6 = 0.;
+//  double max7 = 0.;
+//  double max8 = 0.;
+//  double max9 = 0.;
 
-  for(int i=0; i<leng; i++)
+//  for(int i=0; i<leng; i++)
+//  {
+//    if(abs(evectors(i,Nmodos-1).real()) > max0)
+//      max0 = abs(evectors(i,Nmodos-1).real());
+//    if(abs(evectors(i,Nmodos-2).real()) > max1)
+//      max1 = abs(evectors(i,Nmodos-2).real());
+//    if(abs(evectors(i,Nmodos-3).real()) > max2)
+//      max2 = abs(evectors(i,Nmodos-3).real());
+//    //if(abs(evectors(i,Nmodos-4).real()) > max3)
+//    //  max3 = abs(evectors(i,Nmodos-4).real());
+//    //if(abs(evectors(i,Nmodos-5).real()) > max4)
+//    //  max4 = abs(evectors(i,Nmodos-5).real());
+//    //if(abs(evectors(i,Nmodos-6).real()) > max5)
+//    //  max5 = abs(evectors(i,Nmodos-6).real()); //if(abs(evectors(i,Nmodos-7).real()) > max6)
+//    //  max6 = abs(evectors(i,Nmodos-7).real());
+//    //if(abs(evectors(i,Nmodos-8).real()) > max7)
+//    //  max7 = abs(evectors(i,Nmodos-8).real());
+//    //if(abs(evectors(i,Nmodos-9).real()) > max8)
+//    //  max8 = abs(evectors(i,Nmodos-9).real());
+//    //if(abs(evectors(i,Nmodos-10).real()) > max9)
+//    //  max9 = abs(evectors(i,Nmodos-10).real());
+//
+//  }
+
+  for(int i=0; i<Nmodos; i++)
   {
-    if(abs(evectors(i,Nmodos-1).real()) > max0)
-      max0 = abs(evectors(i,Nmodos-1).real());
-    if(abs(evectors(i,Nmodos-2).real()) > max1)
-      max1 = abs(evectors(i,Nmodos-2).real());
-    if(abs(evectors(i,Nmodos-3).real()) > max2)
-      max2 = abs(evectors(i,Nmodos-3).real());
-    //if(abs(evectors(i,Nmodos-4).real()) > max3)
-    //  max3 = abs(evectors(i,Nmodos-4).real());
-    //if(abs(evectors(i,Nmodos-5).real()) > max4)
-    //  max4 = abs(evectors(i,Nmodos-5).real());
-    //if(abs(evectors(i,Nmodos-6).real()) > max5)
-    //  max5 = abs(evectors(i,Nmodos-6).real());
-    //if(abs(evectors(i,Nmodos-7).real()) > max6)
-    //  max6 = abs(evectors(i,Nmodos-7).real());
-    //if(abs(evectors(i,Nmodos-8).real()) > max7)
-    //  max7 = abs(evectors(i,Nmodos-8).real());
-    //if(abs(evectors(i,Nmodos-9).real()) > max8)
-    //  max8 = abs(evectors(i,Nmodos-9).real());
-    //if(abs(evectors(i,Nmodos-10).real()) > max9)
-    //  max9 = abs(evectors(i,Nmodos-10).real());
-
-  }
-
-
-  ofstream outfile_evec0;
-  outfile_evec0.open("eigenvectors0.dat");
-  for(int j=0; j<Ntot; j++)
-  {
-    for(int i=0; i<Ntot; i++)
+    double max=0;
+    for(int j=0; j<leng; j++)
     {
-      if(grid[i][j].second>=1)
-        outfile_evec0 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-1).real()/max0 << endl;
+      cout << i << "  " << j << endl;
+      if(abs(evectors(j,Nmodos-(i+1)).real()) > max)
+        max = abs(evectors(j,Nmodos-(i+1)).real());
     }
-    outfile_evec0 << endl;
-  }
-
-  outfile_evec0.close();
-
-  ofstream outfile_evec1;
-  outfile_evec1.open("eigenvectors1.dat");
-
-  for(int j=0; j<Ntot; j++)
-  {
-    for(int i=0; i<Ntot; i++)
+    cout << "BATATA" << endl;
+    ofstream outfile_evec;
+    string file_vec = string("eigenvectors") + to_string(i);
+    file_vec += string(".dat");
+    outfile_evec.open(file_vec.c_str());
+    for(int jj=0; jj<Ntot; jj++)
     {
-      if(grid[i][j].second>=1)
-        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real()/max1 << endl;
+      for(int ii=0; ii<Ntot; ii++)
+      {
+        if(grid[ii][jj].second>=1)
+          outfile_evec << h*jj << "   " << h*ii << "   " << evectors(grid[ii][jj].first,Nmodos-(i+1)).real()/max << endl;
+      }
+      outfile_evec << endl;
     }
-    outfile_evec1 << endl;
+    outfile_evec.close();
   }
 
-  outfile_evec1.close();
 
-  cout << "escrevi o segundo vector proprio" << endl;
-
-  ofstream outfile_evec2;
-  outfile_evec2.open("eigenvectors2.dat");
-
-  for(int j=0; j<Ntot; j++)
-  {
-    for(int i=0; i<Ntot; i++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real()/max2 << endl;
-    }
-    outfile_evec2 << endl;
-  }
-
-  outfile_evec2.close();
-
-  cout << "escrevi o terceiro vector proprio" << endl;
-
-/*  ofstream outfile_evec3;
-  outfile_evec3.open("eigenvectors3.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real()/max3 << endl;
-    }
-  }
-
-  outfile_evec3.close();
-
-  cout << "escrevi o quarto vector proprio" << endl;
-
-  ofstream outfile_evec4;
-  outfile_evec4.open("eigenvectors4.dat");
-
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real()/max4 << endl;
-    }
-  }
-
-  outfile_evec4.close();
-
-  cout << "escrevi o quinto vector proprio" << endl;
-
-
-  ofstream outfile_evec5;
-  outfile_evec5.open("eigenvectors5.dat");
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec5 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-6).real()/max5 << endl;
-    }
-  }
-
-  outfile_evec5.close();
-
-
-  ofstream outfile_evec6;
-  outfile_evec6.open("eigenvectors6.dat");
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec6 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-7).real()/max6 << endl;
-    }
-  }
-
-  outfile_evec6.close();
-
-
-  ofstream outfile_evec7;
-  outfile_evec7.open("eigenvectors7.dat");
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec7 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-8).real()/max7 << endl;
-    }
-  }
-
-  outfile_evec7.close();
-
-  ofstream outfile_evec8;
-  outfile_evec8.open("eigenvectors8.dat");
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec8 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-9).real()/max8 << endl;
-    }
-  }
-
-  outfile_evec8.close();
-
-
-  ofstream outfile_evec9;
-  outfile_evec9.open("eigenvectors9.dat");
-  for(int i=0; i<Ntot; i++)
-  {
-    for(int j=0; j<Ntot; j++)
-    {
-      if(grid[i][j].second>=1)
-        outfile_evec9 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-10).real()/max9 << endl;
-    }
-  }
-
-  outfile_evec9.close();*/
+//  ofstream outfile_evec0;
+//  outfile_evec0.open("eigenvectors0.dat");
+//  for(int j=0; j<Ntot; j++)
+//  {
+//    for(int i=0; i<Ntot; i++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec0 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-1).real()/max0 << endl;
+//    }
+//    outfile_evec0 << endl;
+//  }
+//
+//  outfile_evec0.close();
+//
+//  ofstream outfile_evec1;
+//  outfile_evec1.open("eigenvectors1.dat");
+//
+//  for(int j=0; j<Ntot; j++)
+//  {
+//    for(int i=0; i<Ntot; i++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec1 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-2).real()/max1 << endl;
+//    }
+//    outfile_evec1 << endl;
+//  }
+//
+//  outfile_evec1.close();
+//
+//  cout << "escrevi o segundo vector proprio" << endl;
+//
+//  ofstream outfile_evec2;
+//  outfile_evec2.open("eigenvectors2.dat");
+//
+//  for(int j=0; j<Ntot; j++)
+//  {
+//    for(int i=0; i<Ntot; i++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec2 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-3).real()/max2 << endl;
+//    }
+//    outfile_evec2 << endl;
+//  }
+//
+//  outfile_evec2.close();
+//
+//  cout << "escrevi o terceiro vector proprio" << endl;
+//
+///*  ofstream outfile_evec3;
+//  outfile_evec3.open("eigenvectors3.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec3 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-4).real()/max3 << endl;
+//    }
+//  }
+//
+//  outfile_evec3.close();
+//
+//  cout << "escrevi o quarto vector proprio" << endl;
+//
+//  ofstream outfile_evec4;
+//  outfile_evec4.open("eigenvectors4.dat");
+//
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec4 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-5).real()/max4 << endl;
+//    }
+//  }
+//
+//  outfile_evec4.close();
+//
+//  cout << "escrevi o quinto vector proprio" << endl;
+//
+//
+//  ofstream outfile_evec5;
+//  outfile_evec5.open("eigenvectors5.dat");
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec5 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-6).real()/max5 << endl;
+//    }
+//  }
+//
+//  outfile_evec5.close();
+//
+//
+//  ofstream outfile_evec6;
+//  outfile_evec6.open("eigenvectors6.dat");
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec6 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-7).real()/max6 << endl;
+//    }
+//  }
+//
+//  outfile_evec6.close();
+//
+//
+//  ofstream outfile_evec7;
+//  outfile_evec7.open("eigenvectors7.dat");
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec7 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-8).real()/max7 << endl;
+//    }
+//  }
+//
+//  outfile_evec7.close();
+//
+//  ofstream outfile_evec8;
+//  outfile_evec8.open("eigenvectors8.dat");
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec8 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-9).real()/max8 << endl;
+//    }
+//  }
+//
+//  outfile_evec8.close();
+//
+//
+//  ofstream outfile_evec9;
+//  outfile_evec9.open("eigenvectors9.dat");
+//  for(int i=0; i<Ntot; i++)
+//  {
+//    for(int j=0; j<Ntot; j++)
+//    {
+//      if(grid[i][j].second>=1)
+//        outfile_evec9 << h*j << "   " << h*i << "   " << evectors(grid[i][j].first,Nmodos-10).real()/max9 << endl;
+//    }
+//  }
+//
+//  outfile_evec9.close();*/
 
   for(int i=0; i<D; i++)
     delete[] a[i];

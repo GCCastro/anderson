@@ -42,6 +42,10 @@ gen: koch estranho quad
 koch: koch_gen.o
 	$(CC) -o koch_gen $^ 
 
+koch2: koch2_gen.o
+	$(CC) -o koch2_gen $^ 
+
+
 estranho: estranho_gen.o
 	$(CC) -o estranho_gen $^ 
 
@@ -49,6 +53,9 @@ quad: square_gen.o
 	$(CC) -o square_gen $^ 
 
 koch_gen.o: koch_gen.C
+	$(CC) $(CFLAGS) $^ $(SPECTRA)
+
+koch2_gen.o: koch2_gen.C
 	$(CC) $(CFLAGS) $^ $(SPECTRA)
 
 estranho_gen.o: estranho_gen.C
