@@ -3,8 +3,8 @@
 #include <eigen3/Eigen/Sparse>
 #include <eigen3/Eigen/Core>
 
-#include <SymEigsSolver.h>
-#include <MatOp/SparseSymMatProd.h> 
+#include <GenEigsSolver.h>
+#include <MatOp/SparseGenMatProd.h> 
 
 
 #include <iostream>
@@ -32,8 +32,8 @@ double f(double h, int xi, int yj, int N, double **a, int D)
   int x = (int)((double)xi/((double)N)*D);
   int y = (int)((double)yj/((double)N)*D);
 
-  return a[x][y];
-  //return 0.;
+  //return a[x][y];
+  return 0.;
 }
 
 
@@ -51,8 +51,8 @@ int main()
   double sig;
   cin >> sig;
 
-  double L = 1.7;
-  double h = 0.009;
+  double L = 1.;
+  double h = 0.01;
   int Ntot = int(L/h);
   cout << Ntot << endl;
 
@@ -159,7 +159,7 @@ int main()
 
 
 
-  int Nmodos = 100;
+  int Nmodos = 10;
 
   vector<T> coefficients;
 
@@ -500,9 +500,9 @@ int main()
 
 //Calculo de valores e vectores proprios
 
-  SparseSymMatProd<double> op(A);
+  SparseGenMatProd<double> op(A);
   cout << "BATATA1" << endl;
-  SymEigsSolver< double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+7000);
+  GenEigsSolver< double, SMALLEST_MAGN, SparseGenMatProd<double> > eigs(&op, Nmodos, 2*Nmodos+70);
   cout << "BATATA2" << endl;
   eigs.init();
   cout << "BATATA3" << endl;
@@ -579,11 +579,9 @@ int main()
     double max=0;
     for(int j=0; j<leng; j++)
     {
-      cout << i << "  " << j << endl;
       if(abs(evectors(j,Nmodos-(i+1)).real()) > max)
         max = abs(evectors(j,Nmodos-(i+1)).real());
     }
-    cout << "BATATA" << endl;
     ofstream outfile_evec;
     string file_vec = string("eigenvectors") + to_string(i);
     file_vec += string(".dat");

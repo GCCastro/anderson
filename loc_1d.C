@@ -46,7 +46,7 @@ int main()
   double Vmed = 4000.;
   double Vini = 0.;
   double Vend = 8000.;
-  int D = 20;
+  int D = 40;
   double *a = new double[D];
 
   //--- GSL random init ---
@@ -62,7 +62,7 @@ int main()
 
   //isto devia vir directamente do ficheiro
   double L = 1.;
-  double h = 0.0009;
+  double h = 0.0001;
   int N = int(L/h);
   cout << N << endl;
   int Nmodos = 5;
@@ -132,18 +132,53 @@ int main()
   Eigen::MatrixXcd evectors = eigs.eigenvectors();
   cout << "sobrevivi a calcular os vectores proprios" << endl;
 
-
+  double agmon[Nmodos][N];
 
   for(int i=0; i<Nmodos; i++)
   {
     double max=0;
+    int imax=0;
     for(int j=0; j<N; j++)
     {
-      cout << i << "  " << j << endl;
       if(abs(evectors(j,Nmodos-(i+1)).real()) > max)
+      {
         max = abs(evectors(j,Nmodos-(i+1)).real());
+        imax = j;
+      }
     }
-    cout << "BATATA" << endl;
+    double ximax = 0;
+    for(int k=1; k<N-1; k++)
+    {
+      ximax += 1./2.*(k*(evectors(k,Nmodos-(i+1)).real())*(evectors(k,Nmodos-(i+1)).real())+(k+1)*(evectors(k+1,Nmodos-(i+1)).real())*(evectors(k+1,Nmodos-(i+1)).real()));
+    }
+    cout << "maximo antes" << endl;
+    cout << imax << endl;
+    imax = (int)round(ximax);
+    cout << "maximo depois" << endl;
+    cout << imax << endl;
+    for(int k=1; k<N-1; k++)
+    {
+      double rho = 0.;
+      if(k==imax)
+      {
+        agmon[i][k]=1.;
+        continue;
+      }
+      int step = (k-imax)/abs(k-imax);
+      for(int l=imax; l!=k-1; l+=step)
+      {
+        double arg1 = 1./x(l)-evalues(Nmodos-(i+1)).real();
+        double arg2 = 1./x(l+step)-evalues(Nmodos-(i+1)).real();
+
+        if(arg1<0.)
+          arg1=0.;
+        if(arg2<0.)
+          arg2=0.;
+        rho += h/2.*(sqrt(arg1)+sqrt(arg2));
+      }
+      agmon[i][k] = exp(-rho);
+    }
+
     ofstream outfile_evec;
     string file_vec = string("eigenvectors") + to_string(i);
     file_vec += string("_1d.dat");
@@ -153,69 +188,18 @@ int main()
       outfile_evec << h*jj << "   " << evectors(jj,Nmodos-(i+1)).real()/max << endl;
     }
     outfile_evec.close();
+    cout << "escrevi o " << i << "º vector proprio" << endl;
+    ofstream outfile_agmon;
+    string file_agmon = string("agmon") + to_string(i);
+    file_agmon += string("_1d.dat");
+    outfile_agmon.open(file_agmon.c_str());
+    for(int jj=0; jj<N; jj++)
+    {
+      outfile_agmon << h*jj << "   " << agmon[i][jj] << endl;
+    }
+    outfile_agmon.close();
+    cout << "escrevi a " << i << "ª estimativa de Agmon" << endl;
   }
-
-
-
-
-
-/*  double max0 = 0.;
-  double max1 = 0.;
-  double max2 = 0.;
-  double max3 = 0.;
-  double max4 = 0.;
-
-  for(int i=0; i<N; i++)
-  {
-    if(abs(evectors(i,Nmodos-1).real()) > max0)
-      max0 = abs(evectors(i,Nmodos-1).real());
-    if(abs(evectors(i,Nmodos-2).real()) > max1)
-      max1 = abs(evectors(i,Nmodos-2).real());
-    if(abs(evectors(i,Nmodos-3).real()) > max2)
-      max2 = abs(evectors(i,Nmodos-3).real());
-    if(abs(evectors(i,Nmodos-4).real()) > max3)
-      max3 = abs(evectors(i,Nmodos-4).real());
-    if(abs(evectors(i,Nmodos-5).real()) > max4)
-      max4 = abs(evectors(i,Nmodos-5).real());
-  }
-
-  ofstream outfile_evec0;
-  outfile_evec0.open("eigenvectors0_1d.dat");
-  for(int i=0; i<N; i++)
-  {
-    outfile_evec0 << h*i << "   " << evectors(i,Nmodos-1).real()/max0 << endl;
-  }
-  outfile_evec0.close();
-  ofstream outfile_evec1;
-  outfile_evec1.open("eigenvectors1_1d.dat");
-  for(int i=0; i<N; i++)
-  {
-    outfile_evec1 << h*i << "   " << evectors(i,Nmodos-2).real()/max1 << endl;
-  }
-  outfile_evec1.close();
-  ofstream outfile_evec2;
-  outfile_evec2.open("eigenvectors2_1d.dat");
-  for(int i=0; i<N; i++)
-  {
-    outfile_evec2 << h*i << "   " << evectors(i,Nmodos-3).real()/max2 << endl;
-  }
-  outfile_evec2.close();
-
-  ofstream outfile_evec3;
-  outfile_evec3.open("eigenvectors3_1d.dat");
-  for(int i=0; i<N; i++)
-  {
-    outfile_evec3 << h*i << "   " << evectors(i,Nmodos-4).real()/max3 << endl;
-  }
-  outfile_evec3.close();
-
-  ofstream outfile_evec4;
-  outfile_evec4.open("eigenvectors4_1d.dat");
-  for(int i=0; i<N; i++)
-  {
-    outfile_evec4 << h*i << "   " << evectors(i,Nmodos-5).real()/max4 << endl;
-  }
-  outfile_evec4.close();*/
 
 
 //Escrever solucao para ficheiro
